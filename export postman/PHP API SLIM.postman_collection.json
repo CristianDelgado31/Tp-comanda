@@ -1,0 +1,157 @@
+{
+	"info": {
+		"_postman_id": "bf020c50-50df-470f-805b-0f66c543173b",
+		"name": "PHP API SLIM",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32146188"
+	},
+	"item": [
+		{
+			"name": "alta empleado",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nombre\": \"Pepe\",\r\n    \"apellido\": \"Argento\",\r\n    \"estado\": \"libre\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:666/agregarEmpleado",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "666",
+					"path": [
+						"agregarEmpleado"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "lista empleados",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "alta producto",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nombre\": \"Coca Cola\",\r\n    \"tipo\": \"Bebida\",\r\n    \"cantidad\": 100\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:666/agregarProducto/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "666",
+					"path": [
+						"agregarProducto",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "lista productos",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Alta mesa",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"codigoIdentificacion\": \"abc12\",\r\n    \"estado\": \"con cliente esperando pedido\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:666/agregarMesa/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "666",
+					"path": [
+						"agregarMesa",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "lista mesas",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "alta pedido",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"codigoAlfanumerico\": \"123bc\",\r\n    \"nombreCliente\": \"Pepe Argento\",\r\n    \"productos\": [\r\n        {\r\n            \"nombre\": \"Coca Cola\",\r\n            \"tipo\": \"bebida\",\r\n            \"cantidad\": 1\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:666/agregarPedido/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "666",
+					"path": [
+						"agregarPedido",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "lista Pedidos",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
