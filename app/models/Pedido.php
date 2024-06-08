@@ -4,8 +4,10 @@ class Pedido {
     public $codigoAlfanumerico;
     public $productos;
     public $nombreCliente;
+    public $codigoMesa;
     public $estado; // pendiente, en preparacion, listo, entregado
-    public $tiempoEstimado; // en minutos
+    public $tiempoEstimado; // el tiempo mas alto de todos los productos que pertenecen al pedido
+    public $precioFinal; // lo calculo haciendo la suma de precios de los productos
 
 
     public function __construct($codigoAlfanumerico, $nombreCliente) {
@@ -19,7 +21,6 @@ class Pedido {
         array_push($this->productos, $producto);
     }
 }
-
 
 
 ?>

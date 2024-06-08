@@ -9,29 +9,24 @@ require_once 'Db/BaseDeDatos.php';
 
 class Restaurante {
 
-    public static function AgregarEmpleado($empleado) { // $empleado es un objeto JSON
+    public static function AgregarUsuario($empleado) { // $empleado es un objeto JSON
         $nombre = $empleado->nombre;
         $apellido = $empleado->apellido;
-        $estado = $empleado->estado;
         $rol = $empleado->rol;
-        BaseDeDatos::AgregarEmpleado($nombre, $apellido, $rol, $estado);
+        $estado = $empleado->estado;
+
+        BaseDeDatos::AgregarUsuario($nombre, $apellido, $rol, $estado);
     }
     
-    public static function ListarEmpleados() {
-        return BaseDeDatos::ListarEmpleados();
-    }
-
-    public static function AgregarSocio($socio) {
-        $nombre = $socio->nombre;
-        $apellido = $socio->apellido;
-        BaseDeDatos::AgregarSocio($nombre, $apellido);
+    public static function ListarUsuarios() {
+        return BaseDeDatos::ListarUsuarios();
     }
 
     public static function AgregarProducto($producto) {
         $nombre = $producto->nombre;
         $tipo = $producto->tipo;
-        $cantidad = $producto->cantidad;
-        BaseDeDatos::AgregarProducto($nombre, $tipo, $cantidad);
+        $precio = $producto->precio;
+        BaseDeDatos::AgregarProducto($nombre, $tipo, $precio);
     }
 
     public static function AgregarMesa($mesa) {
@@ -47,24 +42,45 @@ class Restaurante {
     public static function AgregarPedido($pedido) {
         $codigoAlfanumerico = $pedido->codigoAlfanumerico;
         $nombreCliente = $pedido->nombreCliente;
+        $codigoMesa = $pedido->codigoMesa;
         $estado = $pedido->estado;
-        $tiempoEstimado = $pedido->tiempoEstimado;
+        $precioFinal = 0;
+        // $tiempoEstimado = $pedido->tiempoEstimado;
 
         $listaProductos = BaseDeDatos::ListarProductos();
 
         foreach ($pedido->productos as $producto) {
             foreach ($listaProductos as $productoBD) {
                 if ($producto->nombre == $productoBD['nombre']) {
-                    BaseDeDatos::AgregarPedido($codigoAlfanumerico, $nombreCliente, $estado, $tiempoEstimado, $productoBD['id'], $producto->cantidad);
+                    $precioFinal += $productoBD['precio'] * $producto->cantidad;
+                    BaseDeDatos::AgregarPedidoProducto($codigoAlfanumerico, $productoBD['id'], "pendiente");
+                    // echo $productoBD['id'];
                 }
             }
         }
-        
+
+
+        BaseDeDatos::AgregarPedido($codigoAlfanumerico, $nombreCliente, $codigoMesa, $estado, $precioFinal);
     }
 
     public static function ListarPedidos() {
-        return BaseDeDatos::ListarPedidos();
+        $listaPedidos = BaseDeDatos::ListarPedidos(); // esto devuelve un array de pedidos
+        $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
+    
+        foreach ($listaPedidos as &$pedido) { // Accedemos a cada pedido por referencia
+            $pedido['productos'] = array();
+            foreach ($listaPedidosProductos as $pedidoProducto) {
+                if ($pedido['codigoAlfanumerico'] == $pedidoProducto['codigo_pedido']) {
+                    $pedido['productos'][] = $pedidoProducto; // agrego el producto al pedido correspondiente
+                }
+            }
+        }
+        unset($pedido); // Importante: romper la referencia después del bucle
+    
+        // echo json_encode($listaPedidos);
+        return $listaPedidos;
     }
+    
 
 }
 

@@ -3,12 +3,13 @@
 class Producto {
     public $nombre;
     public $tipo; // comida o bebida
-    public $cantidad;
+    public $precio;
     
-    public function __construct($nombre, $tipo, $cantidad) {
+    public function __construct($nombre, $tipo, $precio) {
         $this->nombre = $nombre;
         $this->tipo = $tipo;
-        $this->cantidad = $cantidad;
+        $this->precio = $precio;
+
     }
 }
 

@@ -15,24 +15,22 @@ $app->get('/hola/', function ($request, $response, array $args) {
 
 $app->post('/agregarEmpleado/', function ($request, $response, array $args) { 
 	$empleado = json_decode($request->getBody()); // que cambia request y response? -> request es lo que recibe y response es lo que devuelve 
-	Restaurante::AgregarEmpleado($empleado);
+	Restaurante::AgregarUsuario($empleado);
 	// echo $empleado->nombre;
 	// echo json_encode($empleado);
 	return $response->withStatus(201); // 201 es el codigo de status que indica que se creo un recurso
 });
 
 $app->get('/listarEmpleados/', function ($request, $response, array $args) {
-	$empleados = BaseDeDatos::ListarEmpleados();
+	$empleados = BaseDeDatos::ListarUsuarios();
 	$response->getBody()->write(json_encode($empleados));
 	return $response->withHeader('Content-Type', 'application/json'); // se indica que el contenido de la respuesta es un json
 });
 
-//productos
+// //productos
 $app->post('/agregarProducto/', function ($request, $response, array $args) { 
 	$producto = json_decode($request->getBody()); // que cambia request y response? -> request es lo que recibe y response es lo que devuelve 
 	Restaurante::AgregarProducto($producto);
-	// echo $empleado->nombre;
-	// echo json_encode($empleado);
 	return $response->withStatus(201);
 });
 
