@@ -39,6 +39,7 @@ class Restaurante {
         return BaseDeDatos::ListarMesas();
     }
 
+    //Mozo
     public static function AgregarPedido($pedido) {
         $codigoAlfanumerico = $pedido->codigoAlfanumerico;
         $nombreCliente = $pedido->nombreCliente;
