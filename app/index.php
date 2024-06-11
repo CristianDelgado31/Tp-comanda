@@ -86,25 +86,49 @@ $app->get('/listarPedidos/', function (Request $request, Response $response) {
 
 $app->put('/agarrarPedidoProducto/', function (Request $request, Response $response) {
 	$pedido = json_decode($request->getBody());
-	
-	// se le va a pedir el nombre y apellido para agarrar un pedido_producto y dependiendo su rol se le permitira o no
-	// Aća se va a pedir el id del pedido_producto y se va a cambiar el estado a "en preparacion"
-	// se va a solicitar agregar un estado
-	// se va a solicitar agregar un tiempo estimado
-	
+	$result = Restaurante::AgarrarPedidoProducto($pedido);
 
-	BaseDeDatos::ActualizarPedido($pedido);
-	return $response->withStatus(200);
+	if($result == -1){
+		$response->getBody()->write(json_encode(array("error" => "El empleado o usuario no existe")));
+	}
+	else if($result == 0)
+	{
+		$response->getBody()->write(json_encode(array("error" => "El empleado esta ocupado")));
+	}
+	else if($result == 1){
+		$response->getBody()->write(json_encode(array("error" => "El pedido_producto ingresado no existe o su rol no tiene permisos para tomarlo")));
+	}
+	else if($result == 2){
+		$response->getBody()->write(json_encode(array("error" => "El pedido_producto ingresado ya fue tomado")));
+	}
+	else if($result == 3){
+		$response->getBody()->write(json_encode(array("error" => "El rol ingresado no tiene pedidos pendientes")));
+	}
+	else {
+		$response->getBody()->write(json_encode($result)); // se devuelve el pedido_producto modificado
+	}
+	// se modificara el registro relacionado con el codigo_pedido de la tabla pedido_producto y se modificara el 
+	// tiempo estimado del pedido si el tiempo_producto es mayor o si tiempo estimado es null -> preguntar al profe
+	
+	return $response->withHeader('Content-Type', 'application/json');
 });
 
+// podria agregarle un middleware de roles de los usuarios
 $app->get('/listaPedidoProductos/', function (Request $request, Response $response) {
-	$pedido = json_decode($request->getBody());
+	$params = $request->getQueryParams();
+	$pedido = Restaurante::ListarPedidosProductos($params["rol"]);
 	
-	// agrego mi nombre y apellido y me va a mostrar una lista de los productos con estado pendiente
+	if($pedido == 0){
+		$response->getBody()->write(json_encode(array("error" => "El rol ingresado no existe")));
+		return $response->withHeader('Content-Type', 'application/json');
+	}
+	else if($pedido == 1){
+		$response->getBody()->write(json_encode(array("error" => "Lista de pedidos-productos esta vacia porque no tiene elementos con estados pendientes con el rol ingresado")));
+		return $response->withHeader('Content-Type', 'application/json');
+	}
 	
-
-	BaseDeDatos::ActualizarPedido($pedido);
-	return $response->withStatus(200);
+	$response->getBody()->write(json_encode($pedido));
+	return $response->withHeader('Content-Type', 'application/json');
 });
 
 $app->run();

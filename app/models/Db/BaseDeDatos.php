@@ -134,8 +134,39 @@ class BaseDeDatos {
         $stmt = $conn->prepare("SELECT * FROM pedido_producto");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    }
 
+    public static function ActualizarPedidoProducto($pedido) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedido_producto SET estado = :estado, id_usuario = :id_usuario, tiempo_producto = :tiempo_producto WHERE id = :id");
+        $stmt->bindParam(':estado', $pedido['estado']);
+        $stmt->bindParam(':id_usuario', $pedido['id_usuario']);
+        $stmt->bindParam(':tiempo_producto', $pedido['tiempo_producto']);
+        $stmt->bindParam(':id', $pedido['id']);
+        $stmt->execute();
+
+        return $pedido;
+    }
+
+    public static function ActualizarPedido($pedido) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET estado = :estado, tiempoEstimado = :tiempoEstimado WHERE id = :id");
+        $stmt->bindParam(':estado', $pedido['estado']);
+        $stmt->bindParam(':tiempoEstimado', $pedido['tiempoEstimado']);
+        $stmt->bindParam(':id', $pedido['id']);
+        $stmt->execute();
+    }
+
+    public static function ActualizarUsuario($usuario) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE empleados SET estado = :estado WHERE id = :id");
+        $stmt->bindParam(':estado', $usuario['estado']);
+        $stmt->bindParam(':id', $usuario['id']);
+        $stmt->execute();
+    }
 
 }
 
