@@ -44,7 +44,7 @@ class BaseDeDatos {
         return $this->connection;
     }
 
-    public static function AgregarUsuario($nombre, $apellido, $rol, $estado) {
+    public static function AgregarUsuario($nombre, $apellido, $rol, $estado = NULL) {
         $db = self::getInstance();
         $conn = $db->getConnection();
         $stmt = $conn->prepare("INSERT INTO empleados (nombre, apellido, rol, estado) VALUES (:nombre, :apellido, :rol, :estado)");
@@ -165,6 +165,15 @@ class BaseDeDatos {
         $stmt = $conn->prepare("UPDATE empleados SET estado = :estado WHERE id = :id");
         $stmt->bindParam(':estado', $usuario['estado']);
         $stmt->bindParam(':id', $usuario['id']);
+        $stmt->execute();
+    }
+
+    public static function ModificarEstadoMesa($codigoIdentificacion, $estado) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET estado = :estado WHERE codigoIdentificacion = :codigoIdentificacion");
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
         $stmt->execute();
     }
 
