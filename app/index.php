@@ -12,7 +12,6 @@ use Slim\Routing\RouteCollectorProxy;
 // use Slim\Routing\RouteContext;
 
 require_once '../vendor/autoload.php';
-require_once 'models/Restaurante.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'controllers/UsuarioController.php';
 require_once 'controllers/MesaController.php';
@@ -29,8 +28,8 @@ $app->addBodyParsingMiddleware(); // Middleware para parsear el body
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 $app->group('/usuarios', function (RouteCollectorProxy $group){
-	$group->get('[/]', \UsuarioController::class . ':MostrarLista');
-	$group->post('[/]', \UsuarioController::class . ':AgregarUsuario');
+	$group->get('[/]', \UsuarioController::class . ':MostrarLista')->add(new AuthMiddleware("socio"));
+	$group->post('[/]', \UsuarioController::class . ':AgregarUsuario')->add(new AuthMiddleware("socio"));
 });
 
 $app->group('/mesas', function (RouteCollectorProxy $group){

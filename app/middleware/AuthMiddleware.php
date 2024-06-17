@@ -2,7 +2,7 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response as ResponseClass;
-require_once __DIR__ . '/../models/Restaurante.php';
+require_once __DIR__ . '/../models/Personas/Persona.php';
 // require_once __DIR__ . '/../models/Db/BaseDeDatos.php';
 
 class AuthMiddleware {
@@ -27,13 +27,14 @@ class AuthMiddleware {
             $nombre = $params["nombre"];
             $apellido = $params["apellido"];
 
-            $listaEmpleados = Restaurante::ListarUsuarios();
+            $listaEmpleados = Persona::MostrarLista();
             if($listaEmpleados != null){
                 foreach($listaEmpleados as $empleado){
-                    if($empleado["nombre"] === $nombre && $empleado["apellido"] === $apellido && $empleado["rol"] === $this->rol){
-                        $response = $requestHandler->handle($request); // Llama al siguiente middleware o al verbo
+                    if($empleado->nombre == $nombre && $empleado->apellido == $apellido){
                         $flag = true;
-                        break;
+                        if($empleado->rol == $this->rol){
+                            $response = $requestHandler->handle($request);
+                        }
                     }
                 }
                 
