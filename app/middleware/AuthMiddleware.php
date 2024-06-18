@@ -4,57 +4,69 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response as ResponseClass;
 require_once __DIR__ . '/../models/Personas/Persona.php';
 // require_once __DIR__ . '/../models/Db/BaseDeDatos.php';
+require_once __DIR__ . '/../utils/AutentificadorJWT.php';
 
 class AuthMiddleware {
 
-    private $rol;
-
-    public function __construct($rol){
-        $this->rol = $rol;
-    }
-
-    public function __invoke(Request $request, RequestHandler $requestHandler){
-        return $this->auth($request, $requestHandler);
-    }
-
-    function auth(Request $request, RequestHandler $requestHandler){
+    public static function VerificarToken(Request $request, RequestHandler $requestHandler) {
         $response = new ResponseClass();
-        $flag = false;
-        echo "Entro al authMW \n";
-        $params = $request->getQueryParams();
+        $header = $request->getHeaderLine('Authorization');
 
-        if(isset($params["nombre"], $params["apellido"])){
-            $nombre = $params["nombre"];
-            $apellido = $params["apellido"];
+		if($header) {
+			$token = trim(explode("Bearer", $header)[1]);
+		} else {
+			$token = "";
+		}
 
-            $listaEmpleados = Persona::MostrarLista();
-            if($listaEmpleados != null){
-                foreach($listaEmpleados as $empleado){
-                    if($empleado->nombre == $nombre && $empleado->apellido == $apellido){
-                        $flag = true;
-                        if($empleado->rol == $this->rol){
-                            $response = $requestHandler->handle($request);
-                        }
-                    }
-                }
-                
-                if($flag == false){
-                    $response->getBody()->write(json_encode(array("error" => "Este usuario no tiene rol de ".$this->rol)));
-                }
-            }
-            else{
-                $response->getBody()->write(json_encode(array("error" => "No hay usuario en la base de datos")));
-            }
-        }
-        else {
-            // no tiene credenciales
-            $response->getBody()->write(json_encode(array("error" => "Complete los campos nombre y apellido")));
+        try {
+            AutentificadorJWT::VerificarToken($token);
+            $esValido = true;
+            $response = $requestHandler->handle($request); // si el token es valido, continua con la peticion
+            return $response;
+        } catch (Exception $e) {
+            $payload = json_encode(array("error" => $e->getMessage()));
         }
 
-        echo "Salgo del authMW \n";
+        $response->getBody()->write($payload);
 
-        return $response;
+        return $response->withHeader('Content-Type', 'application/json');
+
     }
+
+    public static function VerificarRol(Request $request, RequestHandler $requestHandler, $rolesPermitidos) {
+        $response = new ResponseClass();
+        $header = $request->getHeaderLine('Authorization');
+    
+        if ($header) {
+            $token = trim(explode("Bearer", $header)[1]);
+        } else {
+            $token = "";
+        }
+    
+        try {
+            $data = AutentificadorJWT::ObtenerData($token);
+            $rol = $data->usuario->rol;
+    
+            if (in_array($rol, $rolesPermitidos)) {
+                // Si el rol está en los roles permitidos, continuar con la solicitud
+                $response = $requestHandler->handle($request);
+                return $response;
+            } else {
+                // Si el rol no está en los roles permitidos, devolver mensaje de error
+                $payload = json_encode(array("error" => "Este usuario no tiene el rol adecuado para acceder a esta función"));
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            // Manejo de excepciones al decodificar el token
+            $payload = json_encode(array("error" => $e->getMessage()));
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    
+
 }
 
 

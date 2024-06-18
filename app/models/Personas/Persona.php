@@ -34,6 +34,18 @@ class Persona {
         return $listaRetorno; // Devuelve un array de objetos
     
     }
+
+    public static function VerificarUsuario($nombre, $apellido) {
+        $listaUsuarios = BaseDeDatos::ListarUsuarios();
+    
+        foreach ($listaUsuarios as $usuario) {
+            if ($usuario['nombre'] == $nombre && $usuario['apellido'] == $apellido) {
+                return $usuario; // Devuelve un array asociativo
+            }
+        }
+    
+        return null; // Devuelve null si no se encontro el usuario
+    }
 }
 
 
