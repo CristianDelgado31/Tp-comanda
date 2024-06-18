@@ -188,10 +188,6 @@ class Pedido {
             return -1; // El empleado/usuario no existe
         }
 
-        // $listaPedidos = BaseDeDatos::ListarPedidos();
-        // $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
-
-
         foreach ($listaPedidosProductos as $pedidoProducto) { // pedidoProducto es un array asociativo
             if (intval($pedidoProducto['id']) == $id_pedido_producto) {
                 if($pedidoProducto['estado'] != "pendiente"){
@@ -262,6 +258,76 @@ class Pedido {
 
 
         return 1; // El empleado no tiene permisos para tomar el producto
+    }
+
+    public static function TiempoEstimadoDelPedido($codigoPedido, $codigoMesa) {
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $tiempoEstimado = 0;
+    
+        foreach ($listaPedidos as $pedido) {
+            if ($pedido['codigoAlfanumerico'] == $codigoPedido && $pedido['codigoMesa'] == $codigoMesa) {
+                // Verificar si $pedido['tiempoEstimado'] es null
+                if (!is_null($pedido['tiempoEstimado'])) {
+                    $tiempoEstimado = $pedido['tiempoEstimado'];
+                } else {
+                    // Manejar el caso donde $pedido['tiempoEstimado'] es null
+                    $tiempoEstimado = -1;
+                }
+                break;
+            }
+        }
+    
+        if($tiempoEstimado == 0) {
+            return 0; // El pedido no existe
+        }
+        else if($tiempoEstimado == -1){
+            return -1; // El tiempo estimado es nulo (no se ha calculado)
+        }
+    
+        return $tiempoEstimado;
+    }
+    
+
+    public static function FinalizarProductoDePedido($usuario) {
+        $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
+        $registroProductoPedido = null;
+
+        foreach ($listaPedidosProductos as $productoPedido) {
+            if ($productoPedido['id_usuario'] == $usuario->id && $productoPedido['estado'] == "en preparacion") {
+                $productoPedido['estado'] = "listo para servir";
+                BaseDeDatos::ActualizarPedidoProducto($productoPedido); // Actualizar el estado del producto
+                $registroProductoPedido = $productoPedido; // Guardar el producto para devolverlo
+                break;
+            }
+        }
+
+        if ($registroProductoPedido === null) {
+            return -1; //El usuario no tiene productos de pedido en preparación
+        }
+
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $contador = 0;
+
+        foreach ($listaPedidosProductos as $productoPedido) {
+            if ($productoPedido['codigo_pedido'] == $registroProductoPedido['codigo_pedido']) {
+                if ($productoPedido['estado'] == "pendiente" || $productoPedido['estado'] == "en preparacion") {
+                    $contador++; // Contar los productos que no están listos
+                }
+            }
+        }
+
+        if($contador == 1) { // Si es 1, significa que el producto que se acaba de finalizar es el último en preparación
+            foreach ($listaPedidos as $pedido) {
+                if ($pedido['codigoAlfanumerico'] == $registroProductoPedido['codigo_pedido']) {
+                    $pedido['estado'] = "listo para servir";
+                    BaseDeDatos::ActualizarPedido($pedido); // Actualizar el estado del pedido
+                    break;
+                }
+            }
+        }
+
+        $arrUsuario = array("id" => $usuario->id, "estado" => "activo"); // libre
+        BaseDeDatos::ActualizarUsuario($arrUsuario); // Actualizar el estado del usuario
     }
     
 }

@@ -28,6 +28,7 @@ $app->addBodyParsingMiddleware(); // Middleware para parsear el body
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 $app->post('/usuario/login', \UsuarioController::class . ':Login');
+$app->get('/cliente/tiempoEstimado' , \PedidoController::class . ':TiempoEstimadoDelPedido');
 
 $app->group('/usuarios', function (RouteCollectorProxy $group){
 	$group->get('[/]', \UsuarioController::class . ':MostrarLista');
@@ -36,6 +37,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group){
 	$rolesPermitidos = ['socio'];
 	return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 })->add(AuthMiddleware::class . ':VerificarToken');
+
 
 $app->group('/mesas', function (RouteCollectorProxy $group) {
 	$group->get('[/]', \MesaController::class . ':MostrarLista')
@@ -51,17 +53,44 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 		});
 })->add(AuthMiddleware::class . ':VerificarToken');
 
+
 $app->group('/productos', function (RouteCollectorProxy $group){
 	$group->get('[/]', \ProductoController::class . ':MostrarLista');
-	$group->post('[/]', \ProductoController::class . ':AgregarProducto');
-});
+	$group->post('[/]', \ProductoController::class . ':AgregarProducto')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+})->add(AuthMiddleware::class . ':VerificarToken');
+
 
 $app->group('/pedidos', function (RouteCollectorProxy $group){
-	$group->get('[/]', \PedidoController::class . ':MostrarLista');
-	$group->post('[/]', \PedidoController::class . ':AgregarPedido');
-	$group->put('/agarrarPedidoProducto/', \PedidoController::class . ':AgarrarPedidoProducto');
-	$group->get('/listaPedidoProductos/', \PedidoController::class . ':ListarPedidosProductosPorRol');
-});
+	$group->get('[/]', \PedidoController::class . ':MostrarLista')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->post('[/]', \PedidoController::class . ':AgregarPedido')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['mozo', 'socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->put('/agarrarPedidoProducto/', \PedidoController::class . ':AgarrarPedidoProducto')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['cocinero', 'bartender', 'cervecero'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->get('/listaPedidoProductos/', \PedidoController::class . ':ListarPedidosProductosPorRol')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['cocinero', 'bartender', 'cervecero'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->put('/finalizarPedidoProducto/', \PedidoController::class . ':FinalizarProductoDePedido')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['cocinero', 'bartender', 'cervecero'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+})->add(AuthMiddleware::class . ':VerificarToken');
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------------------------------------------------------------------------

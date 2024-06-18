@@ -67,6 +67,8 @@ class UsuarioController {
           ->withHeader('Content-Type', 'application/json');
 
     }
+
+
 }
 
 

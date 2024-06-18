@@ -14,8 +14,19 @@ class PedidoController {
 
 
     public static function ListarPedidosProductosPorRol($request, $response, $args) {
-        $params = $request->getQueryParams();
-        $rol = $params['rol'];
+        $header = $request->getHeaderLine('Authorization');
+    
+        // if ($header) {
+        //     $token = trim(explode("Bearer", $header)[1]);
+        // } else {
+        //     $token = "";
+        // }
+
+        $token = trim(explode("Bearer", $header)[1]);
+
+        $data = AutentificadorJWT::ObtenerData($token);
+        $rol = $data->usuario->rol;
+
         $pedidosProductos = Pedido::ListarPedidosProductos($rol);
 
         if($pedidosProductos == 0){
@@ -103,6 +114,61 @@ class PedidoController {
             $response->getBody()->write($payload);
         }
 
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public static function TiempoEstimadoDelPedido($request, $response, $args) {
+        $request = $request->getQueryParams();
+        $codigoPedido = $request["codigoPedido"] ?? "";
+        $codigoMesa = $request["codigoMesa"] ?? "";
+
+        if($codigoPedido == "" || $codigoMesa == "") {
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        $tiempoEstimado = Pedido::TiempoEstimadoDelPedido($codigoPedido, $codigoMesa);
+
+        if($tiempoEstimado == -1){
+            $response->getBody()->write(json_encode(array("error" => "El tiempo estimado no se pudo calcular porque el pedido no esta en preparacion")));
+            $response->withStatus(404); 
+        }
+        else if($tiempoEstimado != null) {
+            $payload = json_encode(array("tiempoEstimado" => $tiempoEstimado));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        } else if($tiempoEstimado == 0){
+            $response->getBody()->write(json_encode(array("error" => "Pedido no encontrado")));
+            $response->withStatus(404);
+        }
+
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function FinalizarProductoDePedido($request, $response, $args) {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+
+        $data = AutentificadorJWT::ObtenerData($token);
+        $usuario = $data->usuario; // esto es un objeto con los datos del usuario
+
+        $actualizarPedido = Pedido::FinalizarProductoDePedido($usuario);
+
+        if($actualizarPedido == -1){
+            $response->getBody()->write(json_encode(array("error" => "El usuario no tiene producto pedido en preparacion")));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Producto finalizado correctamente"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        }
+        
         return $response
             ->withHeader('Content-Type', 'application/json');
     }
