@@ -83,13 +83,23 @@ class PedidoController {
     public static function AgarrarPedidoProducto($request, $response, $args) {
         $pedido = json_decode($request->getBody());
         
+        // $nombre = $pedido->nombre;
+        // $apellido = $pedido->apellido;
         $id_pedido_producto = $pedido->id_pedido_producto;
-        $nombre = $pedido->nombre;
-        $apellido = $pedido->apellido;
         $tiempoPreparacion = $pedido->tiempoPreparacion;
         $estado = $pedido->estado;
+        $header = $request->getHeaderLine('Authorization');
 
-        $result = Pedido::AgarrarProductoDePedido($nombre, $apellido, $id_pedido_producto, $estado, $tiempoPreparacion);
+        $token = trim(explode("Bearer", $header)[1]);
+
+        $data = AutentificadorJWT::ObtenerData($token);
+
+        // $nombre = $data->usuario->nombre;
+        // $apellido = $data->usuario->apellido;
+        $email = $data->usuario->email;
+
+
+        $result = Pedido::AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion); //nombre, $apellido
 
         if($result == -1){
             $response->getBody()->write(json_encode(array("error" => "El empleado o usuario no existe")));

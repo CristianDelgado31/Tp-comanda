@@ -33,6 +33,7 @@ $app->get('/cliente/tiempoEstimado' , \PedidoController::class . ':TiempoEstimad
 $app->group('/usuarios', function (RouteCollectorProxy $group){
 	$group->get('[/]', \UsuarioController::class . ':MostrarLista');
 	$group->post('[/]', \UsuarioController::class . ':AgregarUsuario');
+	$group->delete('/{id}', \UsuarioController::class . ':EliminarUsuario');
 })->add(function (Request $request, RequestHandler $handler) {
 	$rolesPermitidos = ['socio'];
 	return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);

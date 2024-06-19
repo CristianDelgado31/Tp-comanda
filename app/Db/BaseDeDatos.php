@@ -44,22 +44,25 @@ class BaseDeDatos {
         return $this->connection;
     }
 
-    public static function AgregarUsuario($nombre, $apellido, $rol, $estado = NULL) {
+    public static function AgregarUsuario($nombre, $apellido, $rol, $email, $contrasenia, $estado = NULL) { // $estado es opcional
         $db = self::getInstance();
         $conn = $db->getConnection();
-        $stmt = $conn->prepare("INSERT INTO empleados (nombre, apellido, rol, estado) VALUES (:nombre, :apellido, :rol, :estado)");
+        $stmt = $conn->prepare("INSERT INTO empleados (nombre, apellido, rol, estado, email, contrasenia) VALUES (:nombre, :apellido, :rol, :estado, :email, :contrasenia)");
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':apellido', $apellido);
         $stmt->bindParam(':rol', $rol);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':contrasenia', $contrasenia);
         $stmt->bindParam(':estado', $estado);
         $stmt->execute();
     }
 
     public static function ListarUsuarios() {
-        $db = self::getInstance()->getConnection(); // Obtiene la conexión a la base de datos
-        //$stmt es un objeto PDOStatement que representa una sentencia SQL preparada
-        $stmt = $db->query('SELECT * FROM empleados');
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Devuelve un array asociativo
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT * FROM empleados");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Devuelve un array de arrays asociativos
     }
 
     // tabla productos
@@ -136,6 +139,8 @@ class BaseDeDatos {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
     public static function ActualizarPedidoProducto($pedido) {
         $db = self::getInstance();
         $conn = $db->getConnection();
@@ -159,7 +164,7 @@ class BaseDeDatos {
         $stmt->execute();
     }
 
-    public static function ActualizarUsuario($usuario) {
+    public static function ActualizarEstadoUsuario($usuario) {
         $db = self::getInstance();
         $conn = $db->getConnection();
         $stmt = $conn->prepare("UPDATE empleados SET estado = :estado WHERE id = :id");
@@ -174,6 +179,18 @@ class BaseDeDatos {
         $stmt = $conn->prepare("UPDATE mesas SET estado = :estado WHERE codigoIdentificacion = :codigoIdentificacion");
         $stmt->bindParam(':estado', $estado);
         $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
+        $stmt->execute();
+    }
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+    public static function EliminarUsuario($usuario) { //$usuario es un array asociativo
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE empleados SET estado = :estado, fecha_baja = :fechaBaja WHERE id = :id");
+        $stmt->bindParam(':id', $usuario['id']);
+        $stmt->bindParam(':estado', $usuario['estado']);
+        $stmt->bindParam(':fechaBaja', $usuario['fechaBaja']);
         $stmt->execute();
     }
 

@@ -10,16 +10,38 @@ class UsuarioController {
         $nombre = $usuario->nombre;
         $apellido = $usuario->apellido;
         $rol = $usuario->rol;
-        // $estado = $usuario->estado;
+        $email = $usuario->email;
+        $contrasenia = $usuario->contrasenia;
+        $contrasenia = password_hash($contrasenia, PASSWORD_DEFAULT);
 
-        if($rol != "socio") {
-            $estado = isset($usuario->estado) ? $usuario->estado : "activo"; // si estado no se pasa, por defecto es activo
-            $empleado = new Empleado($nombre, $apellido, $rol, $estado);
-            $empleado->AgregarEmpleado();
-        } else {
-            $socio = new Socio($nombre, $apellido, $rol);
-            $socio->AgregarSocio();
+        $listaUsuarios = Persona::MostrarLista();
+
+        $contadorRolSocios = 0;
+
+        foreach ($listaUsuarios as $usuarioDB) {
+            if ($usuarioDB->email == $email) {
+                $response->getBody()->write(json_encode(array("error" => "El email ya esta registrado")));
+                $response->withStatus(400);
+                return $response
+                  ->withHeader('Content-Type', 'application/json');
+            }
+
+            if ($usuarioDB->rol == "socio" && $usuarioDB->estado == "activo") {
+                $contadorRolSocios++;
+            }
         }
+
+        if ($rol == "socio" && $contadorRolSocios == 3) {
+            $response->getBody()->write(json_encode(array("error" => "Ya hay 3 socios registrados")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        $estado = isset($usuario->estado) ? $usuario->estado : "activo"; // si estado no se pasa, por defecto es activo
+        
+        $usuario = new Persona($nombre, $apellido, $rol, $email, $contrasenia, $estado);
+        $usuario->AgregarUsuario();
 
         $payload = json_encode(array("mensaje" => "Usuario agregado con exito"));
 
@@ -31,7 +53,17 @@ class UsuarioController {
 
     public static function MostrarLista($request, $response, $args) {
         $lista = Persona::MostrarLista();
-        $payload = json_encode(array("listaUsuario" => $lista));
+
+        $listaRetorno = array();
+
+        foreach ($lista as $usuario) {
+            if($usuario->estado == "inactivo") {
+                continue;
+            }
+            $listaRetorno[] = $usuario; // se guarda el usuario en el arrays
+        }
+
+        $payload = json_encode(array("listaUsuario" => $listaRetorno));
 
         $response->getBody()->write($payload);
         return $response
@@ -40,17 +72,17 @@ class UsuarioController {
 
     public static function Login($request, $response, $args) {
         $parametros = $request->getParsedBody();
-        $nombre = $parametros["nombre"] ?? ""; // si no se pasa el nombre, por defecto es ""
-        $apellido = $parametros["apellido"] ?? "";
+        $email = $parametros["email"] ?? ""; // si no se pasa el nombre, por defecto es ""
+        $contrasenia = $parametros["contrasenia"] ?? "";
 
-        if($nombre == "" || $apellido == "") {
+        if($email == "" || $contrasenia == "") {
             $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
             $response->withStatus(400);
             return $response
               ->withHeader('Content-Type', 'application/json');
         }
 
-        $usuario = Persona::VerificarUsuario($nombre, $apellido);
+        $usuario = Persona::VerificarUsuario($email, $contrasenia);
 
         if($usuario != null) {
             $datos = array("usuario" => $usuario); // se guarda el usuario en el token
@@ -68,7 +100,38 @@ class UsuarioController {
 
     }
 
+    public static function EliminarUsuario($request, $response, $args) {
+        // no anda esta validacion
+        // if (!isset($args['id']) || empty($args['id'])) {
+        //     $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+        //     $response->withStatus(400);
+        //     return $response
+        //       ->withHeader('Content-Type', 'application/json');
+        // }
 
+        $id = $args['id']; 
+
+        if(!is_numeric($id)) {
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser un numero")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        $usuario = Persona::EliminarUsuario($id);
+
+        if($usuario == true) {
+            $payload = json_encode(array("mensaje" => "Usuario eliminado con exito"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        } else {
+            $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
+            $response->withStatus(404);
+        }
+
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }
 
 

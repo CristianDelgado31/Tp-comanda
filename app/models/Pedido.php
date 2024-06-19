@@ -147,14 +147,15 @@ class Pedido {
 
     }
 
-    public static function AgarrarProductoDePedido($nombre, $apellido, $id_pedido_producto, $estado, $tiempoPreparacion){
+    public static function AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion){ //nombre, $apellido
         $id_usuario = 0;
         $listaEmpleados = BaseDeDatos::ListarUsuarios();
         $flag = false;
         $empleadoEncontrado = null; // para guardar el empleado que agarra el pedido_producto
 
         foreach ($listaEmpleados as $empleado) { // empleado es un array asociativo
-            if ($empleado['nombre'] == $nombre && $empleado['apellido'] == $apellido) {
+            //$empleado['nombre'] == $nombre && $empleado['apellido'] == $apellido
+            if ($empleado['email'] == $email) { 
                 // si el empleado esta ocupado no se le permitira agarrar un pedido_producto
                 if($empleado['estado'] == "ocupado"){
                     return 4; // El empleado esta ocupado
@@ -208,7 +209,7 @@ class Pedido {
                     }
                 }
                 $arrUsuario = array("id" => $id_usuario, "estado" => "ocupado");
-                BaseDeDatos::ActualizarUsuario($arrUsuario);
+                BaseDeDatos::ActualizarEstadoUsuario($arrUsuario);
                 BaseDeDatos::ActualizarPedidoProducto($pedidoProducto);
             }
         }
@@ -248,7 +249,7 @@ class Pedido {
             if ($pedidoProducto['id'] == $id_pedido_producto) {
                 foreach ($listaProductos as $producto) {
                     if ($pedidoProducto['id_producto'] == $producto['id']) {
-                        if (in_array($producto['tipo'], $arrUsuarios[$rol])) {
+                        if (in_array($producto['tipo'], $arrUsuarios[$rol])) { // 
                             return 0; // El empleado tiene permisos para tomar el producto
                         }
                     }
@@ -321,13 +322,14 @@ class Pedido {
                 if ($pedido['codigoAlfanumerico'] == $registroProductoPedido['codigo_pedido']) {
                     $pedido['estado'] = "listo para servir";
                     BaseDeDatos::ActualizarPedido($pedido); // Actualizar el estado del pedido
+                    BaseDeDatos::ModificarEstadoMesa($pedido['codigoMesa'], "con cliente comiendo");
                     break;
                 }
             }
         }
 
         $arrUsuario = array("id" => $usuario->id, "estado" => "activo"); // libre
-        BaseDeDatos::ActualizarUsuario($arrUsuario); // Actualizar el estado del usuario
+        BaseDeDatos::ActualizarEstadoUsuario($arrUsuario); // Actualizar el estado del usuario
     }
     
 }
