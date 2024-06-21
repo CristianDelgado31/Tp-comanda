@@ -54,16 +54,16 @@ class UsuarioController {
     public static function MostrarLista($request, $response, $args) {
         $lista = Persona::MostrarLista();
 
-        $listaRetorno = array();
+        // $listaRetorno = array();
 
-        foreach ($lista as $usuario) {
-            if($usuario->estado == "inactivo") {
-                continue;
-            }
-            $listaRetorno[] = $usuario; // se guarda el usuario en el arrays
-        }
+        // foreach ($lista as $usuario) {
+        //     if($usuario->estado == "inactivo") {
+        //         continue;
+        //     }
+        //     $listaRetorno[] = $usuario; // se guarda el usuario en el arrays
+        // }
 
-        $payload = json_encode(array("listaUsuario" => $listaRetorno));
+        $payload = json_encode(array("listaUsuario" => $lista));
 
         $response->getBody()->write($payload);
         return $response
@@ -128,6 +128,99 @@ class UsuarioController {
             $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
             $response->withStatus(404);
         }
+
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ModificarUsuario($request, $response, $args) {
+        $header = $request->getHeaderLine('Authorization');
+
+        $token = trim(explode("Bearer", $header)[1]);
+
+        $data = AutentificadorJWT::ObtenerData($token);
+
+        $id = $data->usuario->id;
+        $nombre = $data->usuario->nombre;
+        $apellido = $data->usuario->apellido;
+        $rol = $data->usuario->rol;
+        $estado = $data->usuario->estado;
+        $email = $data->usuario->email;
+        $contrasenia = NULL; // $data->usuario->contrasenia -> esto en el token esta con "" por seguridad
+
+        // cambios al usuario
+        $cambiosUsuario = json_decode($request->getBody());
+
+        if($cambiosUsuario == NULL) {
+            $response->getBody()->write(json_encode(array("error" => "No hay datos para modificar")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        // isset verifica si la variable esta definida y no es null, definir quiere decir que se le asigno un valor
+        // acá se elimina la cuenta de uno mismo
+        if(isset($cambiosUsuario->eliminarCuenta) && $cambiosUsuario->eliminarCuenta == true) {
+            $usuario = Persona::EliminarUsuario($id);
+            if($usuario == true) {
+                $payload = json_encode(array("mensaje" => "Usuario eliminado con exito"));
+                $response->getBody()->write($payload);
+                $response->withStatus(200);
+            }
+            // else {
+            //     $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
+            //     $response->withStatus(404);
+            // }
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+        
+        if($rol == "socio"){
+            if(isset($cambiosUsuario->id) && is_numeric($cambiosUsuario->id) && $cambiosUsuario->id != $id && isset($cambiosUsuario->estado)) {
+                $listaUsuarios = Persona::MostrarLista();
+                
+                foreach ($listaUsuarios as $usuarioDB) {
+                    if ($usuarioDB->id == $cambiosUsuario->id) {
+                        Persona::ModificarEstado($cambiosUsuario->id, $cambiosUsuario->estado);
+                        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+                        $response->getBody()->write($payload);
+                        return $response
+                          ->withHeader('Content-Type', 'application/json');
+                    }
+                }
+            }
+        }
+
+        if (isset($cambiosUsuario->nombre)) {
+            $nombre = $cambiosUsuario->nombre;
+        }
+        if (isset($cambiosUsuario->apellido)) {
+            $apellido = $cambiosUsuario->apellido;
+        }
+        if (isset($cambiosUsuario->email)) {
+            $email = $cambiosUsuario->email;
+            $listaUsuarios = Persona::MostrarLista();
+
+            foreach ($listaUsuarios as $usuarioDB) {
+                if ($usuarioDB->email == $email) {
+                    $response->getBody()->write(json_encode(array("error" => "El email ya esta registrado")));
+                    $response->withStatus(400);
+                    return $response
+                      ->withHeader('Content-Type', 'application/json');
+                }
+            }
+        }
+        if (isset($cambiosUsuario->contrasenia)) {
+            $contrasenia = password_hash($cambiosUsuario->contrasenia, PASSWORD_DEFAULT);
+        }
+        
+
+        $usuario = new Persona($nombre, $apellido, $rol, $email, $contrasenia, $estado);
+        $usuario->id = $id;
+        $usuario->ModificarUsuario();
+
+        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+        $response->getBody()->write($payload);
 
         return $response
           ->withHeader('Content-Type', 'application/json');

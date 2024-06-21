@@ -182,6 +182,188 @@ class PedidoController {
         return $response
             ->withHeader('Content-Type', 'application/json');
     }
+
+    public static function EliminarPedido($request, $response, $args) {
+        $id = $args['id'];
+
+        if(isset($id) == false){ // si no se envia el id
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $result = Pedido::EliminarPedido($id);
+
+        if($result == 1){
+            $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 2){
+            $response->getBody()->write(json_encode(array("error" => "No se pudo eliminar el pedido porque esta en preparacion")));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Pedido eliminado correctamente"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        }
+
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public static function ModificarPedido($request, $response, $args) {
+        $pedido = json_decode($request->getBody());
+
+        if($pedido == null){
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if(!isset($pedido->id) || !is_numeric($pedido->id)){ // si no se envia el id
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser un numero")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if($pedido->id <= 0) {
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser mayor a 0")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $id = $pedido->id;
+        $codigoAlfanumerico = "";
+        $nombreCliente = "";
+        $codigoMesa = "";
+        $tiempoEstimado = "";
+
+        if(isset($pedido->codigoAlfanumerico)){
+            $codigoAlfanumerico = $pedido->codigoAlfanumerico;
+        }
+        if(isset($pedido->nombreCliente)){
+            $nombreCliente = $pedido->nombreCliente;
+        }
+        if(isset($pedido->codigoMesa)){
+            $codigoMesa = $pedido->codigoMesa;
+        }
+        if(isset($pedido->tiempoEstimado)){
+            $tiempoEstimado = $pedido->tiempoEstimado;
+        }
+        
+        if($codigoAlfanumerico == "" && $nombreCliente == "" && $codigoMesa == "" && $tiempoEstimado == ""){
+            $response->getBody()->write(json_encode(array("error" => "No se envio ningun dato para modificar")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $result = Pedido::ModificarPedido($id, $codigoAlfanumerico, $nombreCliente, $codigoMesa, $tiempoEstimado);
+
+        if($result == 1){
+            $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 2){
+            $response->getBody()->write(json_encode(array("error" => "El codigoAlfanumerico ingresado ya existe en un pedido")));
+            $response->withStatus(400);
+        }
+        else if($result == 3){
+            $response->getBody()->write(json_encode(array("error" => "La mesa ingresada no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 4){
+            $response->getBody()->write(json_encode(array("error" => "La mesa ingresada esta ocupada")));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Pedido modificado correctamente"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        }
+
+        // $response->getBody()->write($payload);
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ModificarProductoPedido($request, $response, $args) {
+        $pedido = json_decode($request->getBody());
+
+        if($pedido == null){
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if(!isset($pedido->id) || !is_numeric($pedido->id)){ // si no se envia el id
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser un numero")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if($pedido->id <= 0) {
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser mayor a 0")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $id = $pedido->id;
+        $codigo_pedido = "";
+        $id_producto = "";
+        $tiempo_producto = "";
+        
+        if(isset($pedido->codigo_pedido)){
+            $codigo_pedido = $pedido->codigo_pedido;
+        }
+        if(isset($pedido->id_producto)){
+            $id_producto = $pedido->id_producto;
+        }
+
+        if($codigo_pedido == "" && $id_producto == ""){
+            $response->getBody()->write(json_encode(array("error" => "No se envio ningun dato para modificar")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+        
+        $result = Pedido::ModificarProductoDePedido($id, $codigo_pedido, $id_producto, $tiempo_producto);
+
+        if($result == 1){
+            $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 2){
+            $response->getBody()->write(json_encode(array("error" => "El codigo_pedido del pedido_producto no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 3){
+            $response->getBody()->write(json_encode(array("error" => "El id_producto del pedido_producto no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 5) {
+            $response->getBody()->write(json_encode(array("error" => "No se modifico ningun atributo del producto del pedido")));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Producto del pedido modificado correctamente"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        }
+
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+
+    }
 }
 
 

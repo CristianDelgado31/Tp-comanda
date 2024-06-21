@@ -43,6 +43,85 @@ class MesaController {
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public static function EliminarMesa($request, $response, $args){
+        $id = $args['id'];
+        
+        if(!is_numeric($id) || $id <= 0){
+            $payload = json_encode(array("mensaje" => "El id debe ser numerico y mayor a 0"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $result = Mesa::VerificarMesaPorId($id);
+        if(!$result){ // Si es false la mesa no existe
+            $payload = json_encode(array("mensaje" => "La mesa no existe"));
+            $response->withStatus(400);
+        }
+        else {
+            $resultadoEliminar = Mesa::EliminarMesa($result);
+
+            if(!$resultadoEliminar){
+                $payload = json_encode(array("mensaje" => "La mesa no esta libre para eliminar"));
+                $response->withStatus(400);
+            }
+            else {
+                $payload = json_encode(array("mensaje" => "Mesa eliminada con exito"));
+            }
+        }
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
+    }
+
+    public static function ModificarMesa($request, $response, $args){
+        $body = $request->getParsedBody(); // devuelve un array asociativo
+
+        if(!isset($body['id']) || !isset($body['codigoIdentificacion'])){
+            $payload = json_encode(array("mensaje" => "Faltan datos para modificar la mesa"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+        $id = $body['id'];
+
+        if(!is_numeric($id) || $id <= 0){
+            $payload = json_encode(array("mensaje" => "El id debe ser numerico y mayor a 0"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $codigoIdentificacion = $body['codigoIdentificacion'];
+        $result = Mesa::ModificarMesa($id, $codigoIdentificacion);
+
+        if($result == 1){
+            $payload = json_encode(array("mensaje" => "La mesa no esta libre para modificar"));
+            $response->withStatus(400);
+        }
+        else if($result == 2){
+            $payload = json_encode(array("mensaje" => "La mesa no existe"));
+            $response->withStatus(400);
+        }
+        else if($result == 3){
+            $payload = json_encode(array("mensaje" => "La mesa ya existe"));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
+        }
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
+    }
 }
 
 

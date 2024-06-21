@@ -194,6 +194,122 @@ class BaseDeDatos {
         $stmt->execute();
     }
 
+    public static function ModificarAtributosUsuario($id, $nombre, $apellido, $rol, $email, $contrasenia, $estado) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        if($contrasenia == NULL) {
+            $stmt = $conn->prepare("UPDATE empleados SET nombre = :nombre, apellido = :apellido, rol = :rol, email = :email, estado = :estado WHERE id = :id");
+            $stmt->bindParam(':nombre', $nombre);
+            $stmt->bindParam(':apellido', $apellido);
+            $stmt->bindParam(':rol', $rol);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':estado', $estado);
+            $stmt->bindParam(':id', $id);
+        } else {
+            $stmt = $conn->prepare("UPDATE empleados SET nombre = :nombre, apellido = :apellido, rol = :rol, email = :email, contrasenia = :contrasenia, estado = :estado WHERE id = :id");
+            $stmt->bindParam(':nombre', $nombre);
+            $stmt->bindParam(':apellido', $apellido);
+            $stmt->bindParam(':rol', $rol);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':contrasenia', $contrasenia);
+            $stmt->bindParam(':estado', $estado);
+            $stmt->bindParam(':id', $id);
+        }
+        $stmt->execute();
+    }
+
+    public static function ModificarProducto($id, $nombre, $tipo, $precio) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE productos SET nombre = :nombre, tipo = :tipo, precio = :precio WHERE id = :id");
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->bindParam(':tipo', $tipo);
+        $stmt->bindParam(':precio', $precio);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
+
+    public static function EliminarProducto($id, $fecha_baja) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE productos SET fecha_baja = :fecha_baja WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':fecha_baja', $fecha_baja);
+        $stmt->execute();
+    }
+
+    public static function EliminarMesa($id, $fecha_baja) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET fecha_baja = :fecha_baja WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':fecha_baja', $fecha_baja);
+        $stmt->execute();
+    }
+
+    public static function EliminarPedido($id, $fecha_baja) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET fecha_baja = :fecha_baja WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':fecha_baja', $fecha_baja);
+        $stmt->execute();
+    }
+
+    public static function ModificarMesa($id, $codigoIdentificacion) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET codigoIdentificacion = :codigoIdentificacion WHERE id = :id");
+        $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
+
+    public static function ModificarCodigoPedidoProducto($id, $codigoAlfanumerico, $id_producto = NULL){
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        if($id_producto != NULL) {
+            $stmt = $conn->prepare("UPDATE pedido_producto SET codigo_pedido = :codigoAlfanumerico, id_producto = :id_producto WHERE id = :id");
+            $stmt->bindParam(':id_producto', $id_producto);
+            $stmt->bindParam(':codigoAlfanumerico', $codigoAlfanumerico);
+            $stmt->bindParam(':id', $id);
+        } else {
+            $stmt = $conn->prepare("UPDATE pedido_producto SET codigo_pedido = :codigoAlfanumerico WHERE id = :id");
+            $stmt->bindParam(':codigoAlfanumerico', $codigoAlfanumerico);
+            $stmt->bindParam(':id', $id);
+        }
+        $stmt->execute();
+    }
+
+    public static function ModificarAtributosPedido($pedido) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET codigoAlfanumerico = :codigoAlfanumerico, nombreCliente = :nombreCliente, codigoMesa = :codigoMesa, tiempoEstimado = :tiempoEstimado WHERE id = :id");
+        $stmt->bindParam(':codigoAlfanumerico', $pedido['codigoAlfanumerico']);
+        $stmt->bindParam(':nombreCliente', $pedido['nombreCliente']);
+        $stmt->bindParam(':codigoMesa', $pedido['codigoMesa']);
+        $stmt->bindParam(':tiempoEstimado', $pedido['tiempoEstimado']);
+        $stmt->bindParam(':id', $pedido['id']);
+        $stmt->execute();
+    }
+
+    public static function ModificarPrecioFinalPedido($id, $precioFinal) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET precioFinal = :precioFinal WHERE id = :id");
+        $stmt->bindParam(':precioFinal', $precioFinal);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
+
+    public static function ModificarEstadoPedido($id, $estado) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET estado = :estado WHERE id = :id");
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
 }
 
 

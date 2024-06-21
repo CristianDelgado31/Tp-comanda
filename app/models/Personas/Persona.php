@@ -27,17 +27,15 @@ class Persona {
         $listaRetorno = array();
         //tengo que agregar una condicion para que no muestre los usuarios eliminados
         foreach ($listaUsuarios as $usuario) {
-            // Verifica si el usuario esta inactivo
-            // if($usuario['estado'] == "inactivo") {
-            //     continue;
-            // }
             if ($usuario['rol'] != "socio") {
                 $empleado = new Empleado($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", $usuario['estado']);
                 $empleado->id = $usuario['id'];
+                $empleado->fechaBaja = $usuario['fecha_baja'];
                 array_push($listaRetorno, $empleado);
             } else {
                 $socio = new Socio($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", $usuario['estado']);
                 $socio->id = $usuario['id'];
+                $socio->fechaBaja = $usuario['fecha_baja'];
                 array_push($listaRetorno, $socio);
             }
         }
@@ -51,7 +49,7 @@ class Persona {
     
         foreach ($listaUsuarios as $usuario) {
             // Verifica si el email y la contraseña coinciden
-            if ($usuario['email'] == $email && password_verify($contrasenia, $usuario['contrasenia'])) {
+            if ($usuario['email'] == $email && password_verify($contrasenia, $usuario['contrasenia']) && $usuario['estado'] == "activo" || $usuario['estado'] == "ocupado") {
                 $usuario['contrasenia'] = ""; // No se envia la contraseña
                 return $usuario; // Devuelve un array asociativo
             }
@@ -90,6 +88,22 @@ class Persona {
         $email = $this->email;
         $contrasenia = $this->contrasenia;
         BaseDeDatos::AgregarUsuario($nombre, $apellido, $rol, $email, $contrasenia, $estado);
+    }
+
+
+    public function ModificarUsuario(){
+        $id = $this->id;
+        $nombre = $this->nombre;
+        $apellido = $this->apellido;
+        $rol = $this->rol; // no se cambiará el rol
+        $estado = $this->estado;
+        $email = $this->email;
+        $contrasenia = $this->contrasenia;
+        BaseDeDatos::ModificarAtributosUsuario($id, $nombre, $apellido, $rol, $email, $contrasenia, $estado);
+    }
+
+    public static function ModificarEstado($id, $estado) {
+        $usuario = BaseDeDatos::ActualizarEstadoUsuario(array("id" => $id, "estado" => $estado));
     }
 }
 

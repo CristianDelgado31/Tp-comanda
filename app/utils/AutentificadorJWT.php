@@ -14,7 +14,7 @@ class AutentificadorJWT {
         $ahora = time();
         $payload = array(
         	'iat'=>$ahora,
-        	'exp' => $ahora + 120, // Tiempo de vida del token, 60 es un minuto
+        	'exp' => $ahora + 600, // Tiempo de vida del token, 60 es un minuto
             'aud' => self::Aud(),
         	'data' => $datos,
         	'app' => "Tp comanda"
