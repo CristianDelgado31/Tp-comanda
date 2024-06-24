@@ -15,12 +15,6 @@ class PedidoController {
 
     public static function ListarPedidosProductosPorRol($request, $response, $args) {
         $header = $request->getHeaderLine('Authorization');
-    
-        // if ($header) {
-        //     $token = trim(explode("Bearer", $header)[1]);
-        // } else {
-        //     $token = "";
-        // }
 
         $token = trim(explode("Bearer", $header)[1]);
 
@@ -363,6 +357,82 @@ class PedidoController {
         return $response
             ->withHeader('Content-Type', 'application/json');
 
+    }
+
+    public static function ExportarListaPedidosEnCSV($request, $response, $args) {
+        $lista = Pedido::ListaPedidosFormatoCSV();
+
+        $response->getBody()->write($lista);
+        return $response
+            ->withHeader('Content-Type', 'application/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename="pedidos.csv"');
+    }
+
+    public static function ExportarListaPedidosProductosCSV($request, $response, $args) {
+        $lista = Pedido::ListaPedidosProductosCSV();
+
+        $response->getBody()->write($lista);
+        return $response
+            ->withHeader('Content-Type', 'application/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename="pedidos_productos.csv"');
+    }
+
+
+    public static function ModificarEstadoPedido($request, $response, $args) {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+
+        $data = AutentificadorJWT::ObtenerData($token);
+        $rol = $data->usuario->rol;
+
+
+        $pedido = json_decode($request->getBody());
+
+        if($pedido == null){
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if(!isset($pedido->id) || !is_numeric($pedido->id)){ // si no se envia el id
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser un numero")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if($pedido->id <= 0) {
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser mayor a 0")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $id = $pedido->id;
+
+        $result = Pedido::ModificarEstadoPedido($id, $rol);
+
+        if($result == 1){
+            $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 2){
+            $response->getBody()->write(json_encode(array("error" => "No se pudo modificar el estado del pedido en este momento")));
+            $response->withStatus(400);
+        }
+        else if($result == 3){
+            $response->getBody()->write(json_encode(array("error" => "Solo los socios pueden cerrar")));
+            $response->withStatus(400);
+        }
+        else {
+            $payload = json_encode(array("mensaje" => "Estado del pedido modificado correctamente"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+        }
+
+        return $response
+            ->withHeader('Content-Type', 'application/json');
     }
 }
 

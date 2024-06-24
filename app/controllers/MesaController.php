@@ -122,6 +122,73 @@ class MesaController {
           ->withHeader('Content-Type', 'application/json')
           ->withStatus(200);
     }
+
+
+    public static function ListaMesasEnCSV($request, $response, $args){
+        $lista = Mesa::MostrarLista();
+        $csv = "";
+        foreach($lista as $mesa){
+            $csv .= $mesa->id . "," . $mesa->codigoIdentificacion . "," . $mesa->estado . "\n";
+        }
+
+        $response->getBody()->write($csv);
+        return $response
+          ->withHeader('Content-Type', 'text/csv')
+          ->withHeader('Content-Disposition', 'attachment; filename="mesas.csv"');
+    }
+
+    public static function ImportarMesasDesdeCSV($request, $response, $args){
+        $archivo = $_FILES['mesas'];
+        $nombreArchivo = $archivo['name'];
+        $tipoArchivo = $archivo['type'];
+        $tamanioArchivo = $archivo['size'];
+        $temporalArchivo = $archivo['tmp_name'];
+
+        if($tipoArchivo != "text/csv"){
+            $payload = json_encode(array("mensaje" => "El archivo debe ser de tipo csv"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $lineas = file($temporalArchivo);
+        $errores = array();
+        $exitos = array();
+        foreach($lineas as $linea){
+            $datos = explode(",", $linea); // datos es un array
+            $codigoIdentificacion = $datos[0];
+            
+            if(count($datos) != 2){
+                $errores[] = "La linea " . $linea . " no tiene el formato correcto";
+                continue;
+            }
+            $estado = $datos[1];
+            
+
+            if(strlen($codigoIdentificacion) != 5){ 
+                $errores[] = "El codigo de identificacion " . $codigoIdentificacion . " debe tener 5 caracteres";
+                continue;
+            }
+
+            if(Mesa::VerificarMesa($codigoIdentificacion)){
+                $errores[] = "La mesa con codigo de identificacion " . $codigoIdentificacion . " ya existe";
+            }
+            else {
+                $mesa = new Mesa($codigoIdentificacion, "libre");
+                $mesa->AgregarMesa();
+                $exitos[] = "Mesa con codigo de identificacion " . $codigoIdentificacion . " agregada con exito";
+            }
+        }
+
+        $payload = json_encode(array("errores" => $errores, "exitos" => $exitos));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
+    }
+
+    
 }
 
 

@@ -323,7 +323,7 @@ class Pedido {
                 if ($pedido['codigoAlfanumerico'] == $registroProductoPedido['codigo_pedido']) {
                     $pedido['estado'] = "listo para servir";
                     BaseDeDatos::ActualizarPedido($pedido); // Actualizar el estado del pedido
-                    BaseDeDatos::ModificarEstadoMesa($pedido['codigoMesa'], "con cliente comiendo");
+                    // BaseDeDatos::ModificarEstadoMesa($pedido['codigoMesa'], "con cliente comiendo");
                     break;
                 }
             }
@@ -615,6 +615,84 @@ class Pedido {
             BaseDeDatos::ModificarPrecioFinalPedido($pedidoNuevo['id'], $resultadoPrecio);
         }
         return 4; // Pedido_producto modificado correctamente
+    }
+
+    public static function ListaPedidosFormatoCSV() {
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+
+        // solo de pedidos 
+        $csv = "codigoAlfanumerico,nombreCliente,codigoMesa,estado,tiempoEstimado,precioFinal\n";
+
+        foreach ($listaPedidos as $pedido) {
+            $csv .= $pedido['codigoAlfanumerico'] . "," . $pedido['nombreCliente'] . "," . $pedido['codigoMesa'] . "," . $pedido['estado'] . "," . $pedido['tiempoEstimado'] . "," . $pedido['precioFinal'] . "\n";
+        }
+
+        return $csv;
+    }
+
+    public static function ListaPedidosProductosCSV() {
+        $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
+
+        $csv = "id,codigo_pedido,id_producto,estado,id_usuario,tiempo_producto,fecha_baja\n";
+
+        foreach ($listaPedidosProductos as $pedidoProducto) {
+            $csv .= $pedidoProducto['id'] . "," . $pedidoProducto['codigo_pedido'] . "," . $pedidoProducto['id_producto'] . "," . $pedidoProducto['estado'] . "," . $pedidoProducto['id_usuario'] . ",";
+            $csv .= $pedidoProducto['tiempo_producto'] . "," . $pedidoProducto['fecha_baja'] . "\n";
+        }
+
+        return $csv;
+    }
+
+    public static function ModificarEstadoPedido($id, $rol){
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $flag = false;
+        $pedidoAModificar = null;
+
+        foreach ($listaPedidos as $pedido) {
+            if ($pedido['id'] == $id && $pedido['fecha_baja'] == null) {
+                $pedidoAModificar = $pedido; // Guardar el pedido para devolverlo
+                $flag = true;
+                break;
+            }
+        }
+
+        if(!$flag){
+            return 1; // El pedido no existe
+        }
+
+        $mesaEncontrada = null; // para guardar la mesa del pedido
+
+        $listaMesas = BaseDeDatos::ListarMesas();
+
+        foreach ($listaMesas as $mesa) {
+            if ($mesa['codigoIdentificacion'] == $pedidoAModificar['codigoMesa'] && $mesa['fecha_baja'] == null) {
+                $mesaEncontrada = $mesa;
+                break;
+            }
+        }
+        
+        if($pedidoAModificar['estado'] == "listo para servir" && $mesaEncontrada['estado'] == "con cliente esperando pedido"){
+            $pedidoAModificar['estado'] = "entregado";
+            $mesaEncontrada['estado'] = "con cliente comiendo";
+        }
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente comiendo"){
+            $mesaEncontrada['estado'] = "con cliente pagando";
+        }
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol == "socio"){
+            $mesaEncontrada['estado'] = "cerrada";
+        }
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol != "socio"){
+            return 3; // Solo un socio puede cerrar la mesa
+        }
+        else {
+            return 2; // No se puede modificar el estado del pedido en este momento
+        }
+
+        
+        BaseDeDatos::ModificarEstadoPedido($id, $pedidoAModificar['estado']);
+        BaseDeDatos::ModificarEstadoMesa($mesaEncontrada['codigoIdentificacion'], $mesaEncontrada['estado']);
+
+        return 4; // Pedido modificado correctamente
     }
 
 }

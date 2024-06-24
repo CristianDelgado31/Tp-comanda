@@ -121,6 +121,50 @@ class ProductoController {
           ->withHeader('Content-Type', 'application/json');
 
     }
+
+    public static function ExportarListaEnCSV($request, $response, $args){
+        $lista = Producto::MostrarLista();
+        $csv = "";
+
+        foreach($lista as $producto){
+            $csv .= $producto->id . "," . $producto->nombre . "," . $producto->tipo . "," . $producto->precio . "," . $producto->fecha_baja . "\n";
+        }
+
+        $response->getBody()->write($csv);
+        return $response
+          ->withHeader('Content-Type', 'text/csv')
+          ->withHeader('Content-Disposition', 'attachment; filename="productos.csv"');
+    }
+
+    public static function ImportarProductosDesdeCSV($request, $response, $args){
+        $archivo = $_FILES['productos'];
+        $csv = file_get_contents($archivo['tmp_name']);
+        $lineas = explode("\n", $csv);
+        $productos = array();
+        $arrExito = array();
+        $arrError = array();
+
+        foreach($lineas as $linea){
+            $producto = explode(",", $linea);
+            if(count($producto) == 3){
+                $producto = new Producto($producto[0], $producto[1], $producto[2]);
+                $nombre = $producto->nombre;
+
+                if(!Producto::VerificarProducto($nombre)){
+                    $producto->AgregarProducto();
+                    $arrExito[] = "El producto " . $nombre . " fue importado con exito";
+                } else{
+                    $arrError[] = "El producto " . $nombre . " ya existe";
+                }
+            }
+        }
+
+        $payload = json_encode(array("exitos" => $arrExito, "errores" => $arrError));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(201);
+    }
 }
 
 

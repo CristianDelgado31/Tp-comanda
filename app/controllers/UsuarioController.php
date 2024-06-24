@@ -225,11 +225,109 @@ class UsuarioController {
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public static function ListaUsuariosEnCSV($request, $response, $args) {
+        $lista = Persona::MostrarLista();
+
+        $csv = ""; 
+
+        foreach ($lista as $usuario) {
+            $csv .= $usuario->id . "," . $usuario->nombre . "," . $usuario->apellido . "," . $usuario->rol . "," . $usuario->email . "," . $usuario->estado . "," . $usuario->fechaBaja . "\n";
+        }
+
+        $response->getBody()->write($csv);
+        return $response
+          ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename="usuarios.csv"');
+    }
+
+
+    public static function ImportarUsuariosDesdeCSV($request, $response, $args) {
+        $archivo = $_FILES["usuarios"];
+        
+        if ($archivo["type"] != "text/csv") {
+            $response->getBody()->write(json_encode(array("error" => "El archivo debe ser de tipo CSV")));
+            $response = $response->withStatus(400);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    
+        // Abrir el archivo CSV
+        $file = fopen($archivo["tmp_name"], "r");
+        
+        $listaUsuarios = Persona::MostrarLista();
+        $contadorRolSocios = 0;
+    
+        foreach ($listaUsuarios as $usuarioDB) {
+            if ($usuarioDB->rol == "socio" && $usuarioDB->estado == "activo") {
+                $contadorRolSocios++;
+            }
+        }
+    
+        $errores = [];
+        $usuariosImportados = 0;
+    
+        // Leer cada línea del archivo CSV
+        while (($data = fgetcsv($file, 1000, ",")) !== FALSE) {
+            // Verificar si la cantidad de datos en la fila es correcta
+            if (count($data) == 5) {
+                $nombre = $data[0];
+                $apellido = $data[1];
+                $rol = $data[2];
+                $email = $data[3];
+                $contrasenia = password_hash($data[4], PASSWORD_DEFAULT);
+                $estado = "activo";
+                
+                // Verificar si el email es válido
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $errores[] = "El email '$email' no es válido.";
+                    continue;
+                }
+
+                $emailYaRegistrado = false;
+                
+                foreach ($listaUsuarios as $usuarioDB) {
+                    if ($usuarioDB->email == $email) {
+                        $emailYaRegistrado = true;
+                        break;
+                    }
+                }
+    
+                if ($emailYaRegistrado) {
+                    $errores[] = "El email '$email' ya está registrado.";
+                    continue;
+                }
+    
+                if ($rol == "socio" && $contadorRolSocios >= 3) {
+                    $errores[] = "Ya hay 3 socios registrados. No se puede registrar el email '$email'.";
+                    continue;
+                }
+    
+                if ($rol == "socio") {
+                    $contadorRolSocios++;
+                }
+    
+                $usuario = new Persona($nombre, $apellido, $rol, $email, $contrasenia, $estado);
+                $usuario->AgregarUsuario();
+                $usuariosImportados++;
+            } else {
+                $errores[] = "Datos incompletos en una fila.";
+            }
+        }
+    
+        // Cerrar el archivo CSV
+        fclose($file);
+    
+        if (count($errores) > 0) {
+            $response->getBody()->write(json_encode(array("errores" => $errores, "usuariosImportados" => $usuariosImportados)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        } else {
+            $response->getBody()->write(json_encode(array("mensaje" => "Usuarios importados con éxito", "usuariosImportados" => $usuariosImportados)));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    
 }
-
-
-
-
 
 
 

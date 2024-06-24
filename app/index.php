@@ -36,6 +36,8 @@ $app->group('/usuarios', function (RouteCollectorProxy $group){
 	$group->get('[/]', \UsuarioController::class . ':MostrarLista');
 	$group->post('[/]', \UsuarioController::class . ':AgregarUsuario');
 	$group->delete('/{id}', \UsuarioController::class . ':EliminarUsuario');
+	$group->get('/exportarCSV', \UsuarioController::class . ':ListaUsuariosEnCSV');
+	$group->post('/importarCSV', \UsuarioController::class . ':ImportarUsuariosDesdeCSV');
 })->add(function (Request $request, RequestHandler $handler) {
 	$rolesPermitidos = ['socio'];
 	return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
@@ -48,20 +50,27 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 			$rolesPermitidos = ['mozo', 'socio']; // Ejemplo de roles permitidos
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 		});
-		
 	$group->post('[/]', \MesaController::class . ':AgregarMesa')
 		->add(function (Request $request, RequestHandler $handler) {
 			$rolesPermitidos = ['socio'];
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 		});
-
 	$group->delete('/{id}', \MesaController::class . ':EliminarMesa')
 		->add(function (Request $request, RequestHandler $handler) {
 			$rolesPermitidos = ['socio'];
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 		});
-	
 	$group->put('[/]', \MesaController::class . ':ModificarMesa')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->get('/exportarCSV', \MesaController::class . ':ListaMesasEnCSV')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->post('/importarCSV', \MesaController::class . ':ImportarMesasDesdeCSV')
 		->add(function (Request $request, RequestHandler $handler) {
 			$rolesPermitidos = ['socio'];
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
@@ -86,7 +95,16 @@ $app->group('/productos', function (RouteCollectorProxy $group){
 			$rolesPermitidos = ['socio'];
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 	});
-
+	$group->get('/exportarCSV', \ProductoController::class . ':ExportarListaEnCSV')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+	});
+	$group->post('/importarCSV', \ProductoController::class . ':ImportarProductosDesdeCSV')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+	});
 })->add(AuthMiddleware::class . ':VerificarToken');
 
 
@@ -127,6 +145,21 @@ $app->group('/pedidos', function (RouteCollectorProxy $group){
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
 		});
 	$group->put('/modificarProductoPedido', \PedidoController::class . ':ModificarProductoPedido')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['mozo', 'socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->get('/exportarCSV/pedidos', \PedidoController::class . ':ExportarListaPedidosEnCSV')
+		->add(function (Request $request, RequestHandler $handler) {
+			$rolesPermitidos = ['socio'];
+			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->get('/exportarCSV/pedidos_productos', \PedidoController::class . ':ExportarListaPedidosProductosCSV')
+	->add(function (Request $request, RequestHandler $handler) {
+		$rolesPermitidos = ['socio'];
+		return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
+		});
+	$group->post('/modificarEstadoPedido', \PedidoController::class . ':ModificarEstadoPedido')
 		->add(function (Request $request, RequestHandler $handler) {
 			$rolesPermitidos = ['mozo', 'socio'];
 			return AuthMiddleware::VerificarRol($request, $handler, $rolesPermitidos);
