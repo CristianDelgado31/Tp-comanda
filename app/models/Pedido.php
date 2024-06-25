@@ -142,10 +142,26 @@ class Pedido {
                 BaseDeDatos::AgregarPedidoProducto($this->codigoAlfanumerico, $productoBD['id'], "pendiente");
             }
         }
-
+        
         BaseDeDatos::ModificarEstadoMesa($this->codigoMesa, "con cliente esperando pedido");
+
+        // Aumentar la cantidad de usos de la mesa
+        self::ModificarCantidadUsoDeMesa($this->codigoMesa);
+
         BaseDeDatos::AgregarPedido($this->codigoAlfanumerico, $this->nombreCliente, $this->codigoMesa, $this->estado, $this->precioFinal);
 
+    }
+
+    public static function ModificarCantidadUsoDeMesa($codigo_mesa){
+        $listaMesas = BaseDeDatos::ListarMesas();
+
+        foreach ($listaMesas as $mesa) {
+            if ($mesa['codigoIdentificacion'] == $codigo_mesa && $mesa['fecha_baja'] == null) {
+                $mesa['cantidad_usos'] += 1;
+                BaseDeDatos::ModificarCantidadUsoDeMesa($mesa['codigoIdentificacion'], $mesa['cantidad_usos']);
+                break;
+            }
+        }
     }
 
     public static function AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion){ //nombre, $apellido
@@ -206,6 +222,8 @@ class Pedido {
                             $pedido['tiempoEstimado'] = $tiempoPreparacion;
                         }
                         BaseDeDatos::ActualizarPedido($pedido);
+                        $tiempo = date('H:i:s');
+                        BaseDeDatos::ModificarHoraEnPedido($pedido['id'], $tiempo, "inicio");
                         break;
                     }
                 }
@@ -324,6 +342,9 @@ class Pedido {
                     $pedido['estado'] = "listo para servir";
                     BaseDeDatos::ActualizarPedido($pedido); // Actualizar el estado del pedido
                     // BaseDeDatos::ModificarEstadoMesa($pedido['codigoMesa'], "con cliente comiendo");
+                    $tiempo = date('H:i:s');
+                    BaseDeDatos::ModificarHoraEnPedido($pedido['id'], $tiempo, "fin");
+                    
                     break;
                 }
             }
@@ -643,7 +664,7 @@ class Pedido {
         return $csv;
     }
 
-    public static function ModificarEstadoPedido($id, $rol){
+    public static function ModificarEstadoPedido($id, $rol){ //id es el id del pedido
         $listaPedidos = BaseDeDatos::ListarPedidos();
         $flag = false;
         $pedidoAModificar = null;
@@ -671,15 +692,18 @@ class Pedido {
             }
         }
         
-        if($pedidoAModificar['estado'] == "listo para servir" && $mesaEncontrada['estado'] == "con cliente esperando pedido"){
+        if($pedidoAModificar['estado'] == "listo para servir" && $mesaEncontrada['estado'] == "con cliente esperando pedido" && $rol == "mozo"){
             $pedidoAModificar['estado'] = "entregado";
             $mesaEncontrada['estado'] = "con cliente comiendo";
         }
-        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente comiendo"){
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente comiendo" && $rol == "mozo"){
             $mesaEncontrada['estado'] = "con cliente pagando";
         }
-        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol == "socio"){
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol == "socio" && $mesaEncontrada['encuesta_realizada'] == 1){
             $mesaEncontrada['estado'] = "cerrada";
+        }
+        else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol == "socio" && $mesaEncontrada['encuesta_realizada'] == 0){
+            return 5; // La mesa no tiene encuesta realizada
         }
         else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol != "socio"){
             return 3; // Solo un socio puede cerrar la mesa
@@ -695,6 +719,275 @@ class Pedido {
         return 4; // Pedido modificado correctamente
     }
 
+
+    public static function RealizarEncuesta($codigo_mesa, $codigo_pedido, $puntuacion_mesa, $puntuacion_restaurante, $puntuacion_mozo, 
+    $puntuacion_cocinero, $puntuacion_bartender, $puntuacion_cervecero, $descripcion) {
+
+        $existeEncuesta = self::VerificarEncuesta($codigo_mesa, $codigo_pedido);
+
+        if($existeEncuesta){ // si es true es porque ya existe la encuesta
+            return -1; // La encuesta ya fue realizada
+        }
+
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $flag = false;
+        $pedidoAModificar = null;
+
+        foreach ($listaPedidos as $pedido) {
+            if ($pedido['codigoAlfanumerico'] == $codigo_pedido && $pedido['fecha_baja'] == null) {
+                $pedidoAModificar = $pedido; // Guardar el pedido para devolverlo
+                $flag = true;
+                break;
+            }
+        }
+
+        if(!$flag){
+            return 1; // El pedido no existe
+        }
+
+        if($pedidoAModificar['estado'] != "entregado"){
+            return 2; // El pedido no fue entregado
+        }
+
+        //verico si las puntuciones de cocina, bartender y cervecero son validas
+        $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
+        $listaProductos = BaseDeDatos::ListarProductos();
+
+        $flagCocinero = false;
+        $flagBartender = false;
+        $flagCervecero = false;
+
+        foreach ($listaPedidosProductos as $pedidoProducto) {
+            if ($pedidoProducto['codigo_pedido'] == $codigo_pedido) {
+                foreach ($listaProductos as $producto) {
+                    if ($pedidoProducto['id_producto'] == $producto['id']) {
+                        if($producto['tipo'] == "comida"){
+                            $flagCocinero = true;
+                        }
+                        if($producto['tipo'] == "trago"){
+                            $flagBartender = true;
+                        }
+                        if($producto['tipo'] == "cerveza"){
+                            $flagCervecero = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(!$flagCocinero && $puntuacion_cocinero != null){
+            return 8; // La puntuacion del cocinero no es valida
+        }
+        if(!$flagBartender && $puntuacion_bartender != null){
+            return 9; // La puntuacion del bartender no es valida
+        }
+        if(!$flagCervecero && $puntuacion_cervecero != null){
+            return 10; // La puntuacion del cervecero no es valida
+        }
+
+        if($flagCocinero && $puntuacion_cocinero == null){
+            return 3; // La puntuacion del cocinero es obligatoria
+        }
+        if($flagBartender && $puntuacion_bartender == null){
+            return 4; // La puntuacion del bartender es obligatoria
+        }
+        if($flagCervecero && $puntuacion_cervecero == null){
+            return 5; // La puntuacion del cervecero es obligatoria
+        }
+
+        //verifico que exista la mesa y que este en estado de encuesta
+        $listaMesas = BaseDeDatos::ListarMesas();
+
+        foreach ($listaMesas as $mesa) {
+            if ($mesa['codigoIdentificacion'] == $codigo_mesa && $mesa['fecha_baja'] == null) {
+                if($mesa['estado'] != "con cliente pagando"){
+                    return 6; // La mesa no esta en estado de encuesta
+                }
+                break;
+            }
+        }
+
+        $fecha = date("Y-m-d");
+        BaseDeDatos::AgregarEncuesta($codigo_mesa, $codigo_pedido, $puntuacion_mesa, $puntuacion_restaurante, $puntuacion_mozo, 
+        $puntuacion_cocinero, $puntuacion_bartender, $puntuacion_cervecero, $descripcion, $fecha);
+
+        //modificar el encuesta_realizada de la mesa
+        BaseDeDatos::ModificarEncuestaMesa($codigo_mesa, true);
+
+        return 7; // Encuesta realizada correctamente
+        
+    }
+
+    public static function VerificarEncuesta($codigo_mesa, $codigo_pedido) {
+        $listaEncuestas = BaseDeDatos::ListarEncuestas();
+        $flag = false;
+
+        foreach ($listaEncuestas as $encuesta) {
+            if ($encuesta['codigo_mesa'] == $codigo_mesa && $encuesta['codigo_pedido'] == $codigo_pedido) {
+                return true; // La encuesta ya fue realizada
+            }
+        }
+
+        return false; // La encuesta no existe
+    }
+
+    public static function ActualizarOperacion($id, $cant_operaciones) {
+        $cant_operaciones++; // Incrementar la cantidad de operaciones // si el valor de cant_operaciones es 0, se le suma 1 y asi sucesivamente
+        BaseDeDatos::ActualizarOperacion($id, $cant_operaciones);
+    }
+
+    public static function ListaOperacionesPorSector(){
+        $listaUsuarios = BaseDeDatos::ListarUsuarios();
+        $cantOperacionesCocina = 0;
+        $cantOperacionesBarra = 0;
+        $cantOperacionesCerveza = 0;
+        $cantOperacionesMozo = 0;
+
+        foreach ($listaUsuarios as $usuario) {
+            if ($usuario['rol'] == "cocinero") {
+                $cantOperacionesCocina += $usuario['cant_operaciones'];
+            }
+            if ($usuario['rol'] == "bartender") {
+                $cantOperacionesBarra += $usuario['cant_operaciones'];
+            }
+            if ($usuario['rol'] == "cervecero") {
+                $cantOperacionesCerveza += $usuario['cant_operaciones'];
+            }
+            if ($usuario['rol'] == "mozo") {
+                $cantOperacionesMozo += $usuario['cant_operaciones'];
+            }
+        }
+
+        $arrOperaciones = array("cocina" => $cantOperacionesCocina, "barra" => $cantOperacionesBarra, "cerveza" => $cantOperacionesCerveza , "mozo" => $cantOperacionesMozo);
+
+        return $arrOperaciones; 
+    }
+
+    public static function ListaOperacionesSectorConEmpleados(){
+        $listaUsuarios = BaseDeDatos::ListarUsuarios();
+        $cantOperacionesCocina = 0;
+        $cantOperacionesBarra = 0;
+        $cantOperacionesCerveza = 0;
+        $cantOperacionesMozo = 0;
+
+        $arrEmpleadosCocina = array();
+        $arrEmpleadosBarra = array();
+        $arrEmpleadosCerveza = array();
+        $arrEmpleadosMozo = array();
+
+        foreach ($listaUsuarios as $usuario) {
+            if ($usuario['rol'] == "cocinero") {
+                $cantOperacionesCocina += $usuario['cant_operaciones'];
+                $arrEmpleadosCocina[] = array("nombre" => $usuario['nombre'], "apellido" => $usuario['apellido']);
+            }
+            if ($usuario['rol'] == "bartender") {
+                $cantOperacionesBarra += $usuario['cant_operaciones'];
+                $arrEmpleadosBarra[] = array("nombre" => $usuario['nombre'], "apellido" => $usuario['apellido']);
+            }
+            if ($usuario['rol'] == "cervecero") {
+                $cantOperacionesCerveza += $usuario['cant_operaciones'];
+                $arrEmpleadosCerveza[] = array("nombre" => $usuario['nombre'], "apellido" => $usuario['apellido']);
+            }
+            if ($usuario['rol'] == "mozo") {
+                $cantOperacionesMozo += $usuario['cant_operaciones'];
+                $arrEmpleadosMozo[] = array("nombre" => $usuario['nombre'], "apellido" => $usuario['apellido']);
+            }
+        }
+
+        $arrOperaciones = array("cocina" => $cantOperacionesCocina, "barra" => $cantOperacionesBarra, "cerveza" => $cantOperacionesCerveza , "mozo" => $cantOperacionesMozo);
+        $arrEmpleados = array("cocina" => $arrEmpleadosCocina, "barra" => $arrEmpleadosBarra, "cerveza" => $arrEmpleadosCerveza , "mozo" => $arrEmpleadosMozo);
+
+        return array($arrOperaciones, $arrEmpleados); 
+    }
+
+
+    //Cantidad de operaciones de cada uno por separado.
+    public static function ListaOperacionesPorEmpleado(){
+        $listaUsuarios = BaseDeDatos::ListarUsuarios();
+        $arrOperaciones = array();
+
+        foreach ($listaUsuarios as $usuario) {
+            $arrOperaciones[] = array("nombre" => $usuario['nombre'], "apellido" => $usuario['apellido'], "rol" => $usuario['rol'], "cant_operaciones" => $usuario['cant_operaciones']);
+        }
+
+        return $arrOperaciones; 
+    }
+
+
+    public static function ProductoMasMenosVendido($dato){
+        $listaEncuestas = BaseDeDatos::ListarEncuestas();
+        $listaProductos = BaseDeDatos::ListarProductos();
+        $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
+    
+        $ventasPorProducto = [];
+    
+        // Inicializar el conteo de ventas en 0 para cada producto
+        foreach($listaProductos as $producto){
+            $ventasPorProducto[$producto['id']] = 0; // esto seria $ventasPorProducto["id del producto"] = 0;
+        }
+    
+        // Contar las ventas para cada producto
+        foreach($listaEncuestas as $encuesta){
+            foreach($listaPedidosProductos as $pedidoProducto){
+                if($encuesta['codigo_pedido'] == $pedidoProducto['codigo_pedido']){
+                    if(isset($ventasPorProducto[$pedidoProducto['id_producto']])){
+                        $ventasPorProducto[$pedidoProducto['id_producto']] += 1;
+                    }
+                }
+            }
+        }
+    
+        // Encontrar el producto más y menos vendido
+        $productoMasVendido = null;
+        $productoMenosVendido = null;
+        $cantidadMaxima = -1; // Inicializar a un valor muy bajo
+        $cantidadMinima = PHP_INT_MAX; // Inicializar a un valor muy alto
+    
+        foreach($listaProductos as $producto){
+            $cantidadVendida = $ventasPorProducto[$producto['id']];
+            
+            if($cantidadVendida > $cantidadMaxima){
+                $cantidadMaxima = $cantidadVendida;
+                $productoMasVendido = $producto;
+            }
+    
+            if($cantidadVendida < $cantidadMinima){
+                $cantidadMinima = $cantidadVendida;
+                $productoMenosVendido = $producto;
+            }
+        }
+    
+        // Devolver el resultado basado en el parámetro $dato
+        if($dato == "mas"){
+            return $productoMasVendido;
+        } else if($dato == "menos"){
+            return $productoMenosVendido;
+        }
+    
+        return null;
+    }
+
+
+    public static function ListaPedidosConMalTiempo(){
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $pedidosMalDeTiempo = [];
+    
+        foreach($listaPedidos as $pedido){
+            // Verificar que tiempo_final y tiempo_inicio no sean nulos
+            if (!is_null($pedido['tiempo_final']) && !is_null($pedido['tiempo_inicio'])) {
+                $compararTiempo = strtotime($pedido['tiempo_final']) - strtotime($pedido['tiempo_inicio']);
+                
+                // Si el tiempo de preparación supera el tiempo estimado
+                if($compararTiempo > ($pedido['tiempoEstimado'] * 60)){
+                    $pedidosMalDeTiempo[] = $pedido;
+                }
+            }
+        }
+    
+        return $pedidosMalDeTiempo;
+    }
+    
+    
 }
 
 ?>

@@ -310,6 +310,86 @@ class BaseDeDatos {
         $stmt->bindParam(':id', $id);
         $stmt->execute();
     }
+
+
+    public static function AgregarEncuesta($codigo_mesa, $codigo_pedido, $puntuacion_mesa, $puntuacion_restaurante, $puntuacion_mozo, 
+    $puntuacion_cocinero, $puntuacion_bartender, $puntuacion_cervecero, $descripcion, $fecha) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("INSERT INTO encuesta_cliente (codigo_mesa, codigo_pedido, puntuacion_mesa, puntuacion_restaurante, puntuacion_mozo, puntuacion_cocinero, puntuacion_bartender, puntuacion_cervecero, descripcion, fecha) VALUES (:codigo_mesa, :codigo_pedido, :puntuacion_mesa, :puntuacion_restaurante, :puntuacion_mozo, :puntuacion_cocinero, :puntuacion_bartender, :puntuacion_cervecero, :descripcion, :fecha)");
+        $stmt->bindParam(':codigo_mesa', $codigo_mesa);
+        $stmt->bindParam(':codigo_pedido', $codigo_pedido);
+        $stmt->bindParam(':puntuacion_mesa', $puntuacion_mesa);
+        $stmt->bindParam(':puntuacion_restaurante', $puntuacion_restaurante);
+        $stmt->bindParam(':puntuacion_mozo', $puntuacion_mozo);
+        $stmt->bindParam(':puntuacion_cocinero', $puntuacion_cocinero);
+        $stmt->bindParam(':puntuacion_bartender', $puntuacion_bartender);
+        $stmt->bindParam(':puntuacion_cervecero', $puntuacion_cervecero);
+        $stmt->bindParam(':descripcion', $descripcion);
+        $stmt->bindParam(':fecha', $fecha);
+        $stmt->execute();
+    }
+
+    public static function ListarEncuestas() {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT * FROM encuesta_cliente");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+ 
+
+    public static function ModificarEncuestaMesa($codigoIdentificacion, $bool) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET encuesta_realizada = :bool WHERE codigoIdentificacion = :codigoIdentificacion");
+        $stmt->bindParam(':bool', $bool);
+        $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
+        $stmt->execute();
+    }
+
+    public static function AgregarLog($id_usuario, $fecha, $hora) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("INSERT INTO logs (id_usuario, fecha, hora) VALUES (:id_usuario, :fecha, :hora)");
+        $stmt->bindParam(':id_usuario', $id_usuario);
+        $stmt->bindParam(':fecha', $fecha);
+        $stmt->bindParam(':hora', $hora);
+        $stmt->execute();
+    }
+
+    public static function ActualizarOperacion($id_usuario, $cant_operacion) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE empleados SET cant_operaciones = :cant_operacion WHERE id = :id_usuario");
+        $stmt->bindParam(':cant_operacion', $cant_operacion);
+        $stmt->bindParam(':id_usuario', $id_usuario);
+        $stmt->execute();
+    }
+
+
+    public static function ModificarHoraEnPedido($id, $tiempo, $clave){
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        if($clave == "inicio"){
+            $stmt = $conn->prepare("UPDATE pedidos SET tiempo_inicio = :tiempo WHERE id = :id");
+        } else {
+            $stmt = $conn->prepare("UPDATE pedidos SET tiempo_final = :tiempo WHERE id = :id");
+        }
+        $stmt->bindParam(':tiempo', $tiempo);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        
+    }
+
+    public static function ModificarCantidadUsoDeMesa($codigoIdentificacion, $cantidad_usos) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET cantidad_usos = :cantidad_usos WHERE codigoIdentificacion = :codigoIdentificacion");
+        $stmt->bindParam(':cantidad_usos', $cantidad_usos);
+        $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
+        $stmt->execute();
+    }
 }
 
 

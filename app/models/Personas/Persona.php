@@ -51,6 +51,12 @@ class Persona {
             // Verifica si el email y la contraseña coinciden
             if ($usuario['email'] == $email && password_verify($contrasenia, $usuario['contrasenia']) && $usuario['estado'] == "activo" || $usuario['estado'] == "ocupado") {
                 $usuario['contrasenia'] = ""; // No se envia la contraseña
+
+                //agrego un log en la base de datos
+                $fecha = date("Y-m-d");
+                $hora = date("H:i:s");
+                BaseDeDatos::AgregarLog($usuario['id'], $fecha, $hora);
+
                 return $usuario; // Devuelve un array asociativo
             }
         }

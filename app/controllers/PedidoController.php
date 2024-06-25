@@ -23,6 +23,10 @@ class PedidoController {
 
         $pedidosProductos = Pedido::ListarPedidosProductos($rol);
 
+        // $id = $data->usuario->id;
+        // $cant_operaciones = $data->usuario->cant_operaciones;
+        // Pedido::ActualizarOperacion($id, $cant_operaciones);
+
         if($pedidosProductos == 0){
             $response->getBody()->write(json_encode(array("error" => "El rol ingresado no existe")));
             return $response
@@ -42,6 +46,15 @@ class PedidoController {
     }
 
     public static function AgregarPedido($request, $response, $args) {
+        //sacar el id del usuario del jwt 
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        $usuario = $data->usuario; // esto es un objeto con los datos del usuario
+        $id = $usuario->id;
+        $cant_operaciones = $usuario->cant_operaciones;
+        // Pedido::ActualizarOperacion($id, $cant_operaciones);
+
         $pedido = json_decode($request->getBody());
         // $productos = $pedido->productos;
         $pedido = new Pedido($pedido->codigoAlfanumerico,$pedido->nombreCliente ,$pedido->codigoMesa, $pedido->estado, $pedido->productos); // $pedido->productos es un array
@@ -65,6 +78,7 @@ class PedidoController {
             $response->withStatus(400);
         }
         else {
+            Pedido::ActualizarOperacion($id, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Pedido agregado correctamente"));
             $response->getBody()->write($payload);
             $response->withStatus(201);
@@ -87,9 +101,9 @@ class PedidoController {
         $token = trim(explode("Bearer", $header)[1]);
 
         $data = AutentificadorJWT::ObtenerData($token);
-
-        // $nombre = $data->usuario->nombre;
-        // $apellido = $data->usuario->apellido;
+        
+        $id = $data->usuario->id;
+        $cant_operaciones = $data->usuario->cant_operaciones;
         $email = $data->usuario->email;
 
 
@@ -114,6 +128,7 @@ class PedidoController {
             $response->getBody()->write(json_encode(array("error" => "El pedido_producto ingresado no existe")));
         }
         else {
+            Pedido::ActualizarOperacion($id, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Pedido tomado correctamente"));
             $response->getBody()->write($payload);
         }
@@ -160,6 +175,8 @@ class PedidoController {
 
         $data = AutentificadorJWT::ObtenerData($token);
         $usuario = $data->usuario; // esto es un objeto con los datos del usuario
+        $id = $usuario->id;
+        $cant_operaciones = $usuario->cant_operaciones;
 
         $actualizarPedido = Pedido::FinalizarProductoDePedido($usuario);
 
@@ -168,6 +185,7 @@ class PedidoController {
             $response->withStatus(400);
         }
         else {
+            Pedido::ActualizarOperacion($id, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Producto finalizado correctamente"));
             $response->getBody()->write($payload);
             $response->withStatus(200);
@@ -209,6 +227,13 @@ class PedidoController {
 
 
     public static function ModificarPedido($request, $response, $args) {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        $usuario = $data->usuario; // esto es un objeto con los datos del usuario
+        $id = $usuario->id;
+        $cant_operaciones = $usuario->cant_operaciones;
+
         $pedido = json_decode($request->getBody());
 
         if($pedido == null){
@@ -277,6 +302,7 @@ class PedidoController {
             $response->withStatus(400);
         }
         else {
+            Pedido::ActualizarOperacion($id, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Pedido modificado correctamente"));
             $response->getBody()->write($payload);
             $response->withStatus(200);
@@ -288,6 +314,13 @@ class PedidoController {
     }
 
     public static function ModificarProductoPedido($request, $response, $args) {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        $usuario = $data->usuario; // esto es un objeto con los datos del usuario
+        $id = $usuario->id;
+        $cant_operaciones = $usuario->cant_operaciones;
+
         $pedido = json_decode($request->getBody());
 
         if($pedido == null){
@@ -349,6 +382,7 @@ class PedidoController {
             $response->withStatus(400);
         }
         else {
+            Pedido::ActualizarOperacion($id, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Producto del pedido modificado correctamente"));
             $response->getBody()->write($payload);
             $response->withStatus(200);
@@ -425,12 +459,190 @@ class PedidoController {
             $response->getBody()->write(json_encode(array("error" => "Solo los socios pueden cerrar")));
             $response->withStatus(400);
         }
+        else if($result == 5){
+            $response->getBody()->write(json_encode(array("error" => "La mesa no tiene encuesta realizada")));
+            $response->withStatus(400);
+        }
         else {
+
+            if($rol != "socio"){
+                $id = $data->usuario->id;
+                $cant_operaciones = $data->usuario->cant_operaciones;
+                Pedido::ActualizarOperacion($id, $cant_operaciones);
+            }
             $payload = json_encode(array("mensaje" => "Estado del pedido modificado correctamente"));
             $response->getBody()->write($payload);
             $response->withStatus(200);
         }
 
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public static function RealizarEncuesta($request, $response, $args) {
+        $pedido = json_decode($request->getBody());
+    
+        if ($pedido == null) {
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+    
+        // Validaciones de campos obligatorios
+        if (empty($pedido->codigo_mesa) || empty($pedido->codigo_pedido) || !isset($pedido->puntuacion_mesa) || 
+            !isset($pedido->puntuacion_restaurante) || !isset($pedido->puntuacion_mozo) || empty($pedido->descripcion)) {
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos obligatorios")));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+    
+        // Validaciones de puntuaciones (1 a 10)
+        $validarPuntuacion = function($puntuacion) {
+            return is_numeric($puntuacion) && $puntuacion >= 1 && $puntuacion <= 10;
+        };
+    
+        if (!$validarPuntuacion($pedido->puntuacion_mesa) || 
+            !$validarPuntuacion($pedido->puntuacion_restaurante) || 
+            !$validarPuntuacion($pedido->puntuacion_mozo)) {
+            $response->getBody()->write(json_encode(array("error" => "Las puntuaciones deben ser números entre 1 y 10")));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+    
+        // Asignación de datos
+        $codigo_mesa = $pedido->codigo_mesa;
+        $codigo_pedido = $pedido->codigo_pedido;
+        $puntuacion_mesa = $pedido->puntuacion_mesa;
+        $puntuacion_restaurante = $pedido->puntuacion_restaurante;
+        $puntuacion_mozo = $pedido->puntuacion_mozo;
+        $descripcion = $pedido->descripcion; // Hasta acá es obligatorio
+    
+        // Opcionales
+        $puntuacion_cocinero = isset($pedido->puntuacion_cocinero) ? $pedido->puntuacion_cocinero : null;
+        $puntuacion_bartender = isset($pedido->puntuacion_bartender) ? $pedido->puntuacion_bartender : null;
+        $puntuacion_cervecero = isset($pedido->puntuacion_cervecero) ? $pedido->puntuacion_cervecero : null;
+    
+        if($puntuacion_cocinero == null && $puntuacion_bartender == null && $puntuacion_cervecero == null) {
+            $response->getBody()->write(json_encode(array("error" => "Debe puntuar al menos a un empleado")));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        if($puntuacion_cocinero != null && !$validarPuntuacion($puntuacion_cocinero) || 
+            $puntuacion_bartender != null && !$validarPuntuacion($puntuacion_bartender) || 
+            $puntuacion_cervecero != null && !$validarPuntuacion($puntuacion_cervecero)) {
+            $response->getBody()->write(json_encode(array("error" => "Las puntuaciones deben ser números entre 1 y 10")));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        // Aquí debes definir cómo se pasan los datos a la función RealizarEncuesta
+        // Ajusta los parámetros según sea necesario
+        $result = Pedido::RealizarEncuesta($codigo_mesa, $codigo_pedido, $puntuacion_mesa, $puntuacion_restaurante, $puntuacion_mozo, $puntuacion_cocinero, $puntuacion_bartender, $puntuacion_cervecero, $descripcion);
+    
+        if($result == -1){
+            $response->getBody()->write(json_encode(array("error" => "La encuesta ya fue realizada")));
+            $response->withStatus(400);
+        }
+        else if ($result == 1) {
+            $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
+            $response->withStatus(400);
+        }
+        else if($result == 2) {
+            $response->getBody()->write(json_encode(array("error" => "El pedido no fue entregado")));
+            $response->withStatus(400);
+        }
+        else if($result == 3) {
+            // // La puntuacion del cocinero es obligatoria
+            $response->getBody()->write(json_encode(array("error" => "Debe puntuar al cocinero")));
+            $response->withStatus(400);
+        }
+        else if($result == 4) {
+            // // La puntuacion del bartender es obligatoria
+            $response->getBody()->write(json_encode(array("error" => "Debe puntuar al bartender")));
+            $response->withStatus(400);
+        }
+        else if($result == 5) {
+            // // La puntuacion del cervecero es obligatoria
+            $response->getBody()->write(json_encode(array("error" => "Debe puntuar al cervecero")));
+            $response->withStatus(400);
+        }
+        else if($result == 6) {
+            // La mesa no esta en estado de encuesta
+            $response->getBody()->write(json_encode(array("error" => "La mesa no esta en estado de encuesta")));
+            $response->withStatus(400);
+        }
+        else if($result == 8){
+            // La puntuacion del cocinero no es valida
+            $response->getBody()->write(json_encode(array("error" => "La puntuacion del cocinero no es valida")));
+            $response->withStatus(400);
+        }
+        else if($result == 9){
+            // La puntuacion del bartender no es valida
+            $response->getBody()->write(json_encode(array("error" => "La puntuacion del bartender no es valida")));
+            $response->withStatus(400);
+        }
+        else if($result == 10){
+            // La puntuacion del cervecero no es valida
+            $response->getBody()->write(json_encode(array("error" => "La puntuacion del cervecero no es valida")));
+            $response->withStatus(400);
+        }
+        else {
+            $response->getBody()->write(json_encode(array("mensaje" => "Encuesta realizada correctamente")));
+            $response->withStatus(200);
+        }
+
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+    
+
+    // lista logs de empleados
+
+
+    //lista cantidad de operaciones por sector (cocina, barra, cerveceria)
+    public static function CantidadOperacionesPorSector($request, $response, $args) {
+        $lista = Pedido::ListaOperacionesPorSector();
+
+        $response->getBody()->write(json_encode(array("Lista operaciones por sector" => $lista)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ListOperacionesSectorConEmpleados($request, $response, $args) {
+        $lista = Pedido::ListaOperacionesSectorConEmpleados();
+
+        $response->getBody()->write(json_encode(array("Lista operaciones por sector con empleados" => $lista)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ListarOperacionesPorEmpleado($request, $response, $args) {
+        $lista = Pedido::ListaOperacionesPorEmpleado();
+
+        $response->getBody()->write(json_encode(array("Lista operaciones por empleado" => $lista)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    
+    public static function MostrarProductoMasVendido($request, $response, $args) {
+        $producto = Pedido::ProductoMasMenosVendido("mas");
+
+        $response->getBody()->write(json_encode(array("Producto mas vendido" => $producto)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function MostrarProductoMenosVendido($request, $response, $args) {
+        $producto = Pedido::ProductoMasMenosVendido("menos");
+
+        $response->getBody()->write(json_encode(array("Producto menos vendido" => $producto)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public static function MostrarPedidosMalDeTiempo($request, $response, $args) {
+        $lista = Pedido::ListaPedidosConMalTiempo();
+
+        $response->getBody()->write(json_encode(array("Lista pedidos con mal tiempo" => $lista)));
         return $response
             ->withHeader('Content-Type', 'application/json');
     }

@@ -188,7 +188,77 @@ class MesaController {
           ->withStatus(200);
     }
 
+    public static function MostrarMesaMasUsada($request, $response, $args){
+        // $mesa = Mesa::MostrarLaMesaMasUsada();
+        $mesa = Mesa::MostrarLaMesaUsada("mas");
+        $payload = json_encode(array("mesaMasUsada" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
     
+    public static function MostrarMesaMenosUsada($request, $response, $args){
+        // $mesa = Mesa::MostrarLaMesaMenosUsada();
+        $mesa = Mesa::MostrarLaMesaUsada("menos");
+        $payload = json_encode(array("mesaMenosUsada" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function MostrarMesaQueMasFacturo($request, $response, $args){
+        $mesa = Mesa::MostrarMesaQueFacturo("mas");
+        $payload = json_encode(array("mesaQueMasFacturo" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function MostrarMesaQueMenosFacturo($request, $response, $args){
+        $mesa = Mesa::MostrarMesaQueFacturo("menos");
+        $payload = json_encode(array("mesaQueMenosFacturo" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function MostrarMejoresComentarios($request, $response, $args){
+        $mesa = Mesa::MostrarMejoresComentarios();
+        $payload = json_encode(array("mejoresComentarios" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function MostrarPeoresComentarios($request, $response, $args){
+        $mesa = Mesa::MostrarPeoresComentarios();
+        $payload = json_encode(array("peoresComentarios" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    //Lo que facturó entre dos fechas dadas.
+    public static function MostrarFacturacionEntreFechas($request, $response, $args){
+        $body = $request->getParsedBody(); // devuelve un array asociativo
+        
+        if(!isset($body['fechaInicio']) || !isset($body['fechaFin'])){
+            $payload = json_encode(array("mensaje" => "Faltan datos"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $fechaInicio = $body['fechaInicio'];
+        $fechaFin = $body['fechaFin'];
+
+        $mesa = Mesa::MostrarFacturacionEntreFechas($fechaInicio, $fechaFin);
+        $payload = json_encode(array("facturacionEntreFechas" => $mesa));
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }
 
 
