@@ -54,15 +54,6 @@ class UsuarioController {
     public static function MostrarLista($request, $response, $args) {
         $lista = Persona::MostrarLista();
 
-        // $listaRetorno = array();
-
-        // foreach ($lista as $usuario) {
-        //     if($usuario->estado == "inactivo") {
-        //         continue;
-        //     }
-        //     $listaRetorno[] = $usuario; // se guarda el usuario en el arrays
-        // }
-
         $payload = json_encode(array("listaUsuario" => $lista));
 
         $response->getBody()->write($payload);
@@ -101,14 +92,6 @@ class UsuarioController {
     }
 
     public static function EliminarUsuario($request, $response, $args) {
-        // no anda esta validacion
-        // if (!isset($args['id']) || empty($args['id'])) {
-        //     $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
-        //     $response->withStatus(400);
-        //     return $response
-        //       ->withHeader('Content-Type', 'application/json');
-        // }
-
         $id = $args['id']; 
 
         if(!is_numeric($id)) {
