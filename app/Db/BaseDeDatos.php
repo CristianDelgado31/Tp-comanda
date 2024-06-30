@@ -20,18 +20,6 @@ class BaseDeDatos {
         }
     }
     
-    // private function __construct() {
-    //     try {
-    //         // Usar el socket en lugar de host y puerto
-    //         $dsn = 'mysql:unix_socket=/opt/lampp/var/mysql/mysql.sock;dbname=db_restaurante;charset=utf8';
-    //         $this->connection = new PDO($dsn, 'root', '');
-    //         $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    //     } catch (PDOException $e) {
-    //         echo 'Error de conexión: ' . $e->getMessage();
-    //     }
-    // }
-    
-    
 
     public static function getInstance() {
         if (self::$instance === null) {
@@ -183,8 +171,8 @@ class BaseDeDatos {
     }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
-    public static function EliminarUsuario($usuario) { //$usuario es un array asociativo
+    //EliminarUsuario se llamaba antes
+    public static function ModificarEstadoUsuario($usuario) { //$usuario es un array asociativo
         $db = self::getInstance();
         $conn = $db->getConnection();
         $stmt = $conn->prepare("UPDATE empleados SET estado = :estado, fecha_baja = :fechaBaja WHERE id = :id");

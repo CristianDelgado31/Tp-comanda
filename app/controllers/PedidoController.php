@@ -13,7 +13,6 @@ class PedidoController {
             ->withHeader('Content-Type', 'application/json');
     }
 
-
     public static function ListarPedidosProductosPorRol($request, $response, $args) {
         $header = $request->getHeaderLine('Authorization');
 
@@ -35,25 +34,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $pedidosProductos = Pedido::ListarPedidosProductos($rol);
-
-        // if($pedidosProductos == 0){
-        //     $response->getBody()->write(json_encode(array("error" => "El rol ingresado no existe")));
-        //     return $response
-        //         ->withHeader('Content-Type', 'application/json');
-        // }
-        // else if($pedidosProductos == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "No hay pedidos pendientes")));
-        //     return $response
-        //         ->withHeader('Content-Type', 'application/json');
-        // }
-
-        // $payload = json_encode(array("listaPedidosProductos" => $pedidosProductos));
-        // $response->getBody()->write($payload);
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
     public static function AgregarPedido($request, $response, $args) {
@@ -84,34 +64,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = $pedido->AgregarPedido();
-
-        // if($result == -1){
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == -2){
-        //     $response->getBody()->write(json_encode(array("error" => "El codigoAlfanumerico del pedido ya existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == -3){
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa existe pero esta ocupada")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == -4){
-        //     $response->getBody()->write(json_encode(array("error" => "Uno de los productos no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     Pedido::ActualizarOperacion($id, $cant_operaciones);
-        //     $payload = json_encode(array("mensaje" => "Pedido agregado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(201);
-        // }
-        
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
     public static function AgarrarPedidoProducto($request, $response, $args) {
@@ -144,34 +96,6 @@ class PedidoController {
                 ->withHeader('Content-Type', 'application/json');
         }
 
-        // $result = Pedido::AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion); //nombre, $apellido
-
-        // if($result == -1){
-        //     $response->getBody()->write(json_encode(array("error" => "El empleado o usuario no existe")));
-        // }
-        // else if($result == 4){
-        //     $response->getBody()->write(json_encode(array("error" => "El empleado esta ocupado")));
-        // }
-        // else if($result == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "El rol del usuario no tiene permisos para tomarlo")));
-        // }
-        // else if($result == 2){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido_producto ingresado ya fue tomado")));
-        // }
-        // else if($result == 3){
-        //     $response->getBody()->write(json_encode(array("error" => "El rol del empleado no tiene pedidos pendientes")));
-        // }
-        // else if($result == 5){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido_producto ingresado no existe")));
-        // }
-        // else {
-        //     // Pedido::ActualizarOperacion($id, $cant_operaciones); //descomentar despues esto
-        //     $payload = json_encode(array("mensaje" => "Pedido tomado correctamente"));
-        //     $response->getBody()->write($payload);
-        // }
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
 
@@ -192,31 +116,13 @@ class PedidoController {
             $payload = json_encode(array("tiempoEstimado" => $tiempoEstimado));
             $response = $response->withStatus(200);    
         } catch (Exception $e) {
-            $payload = json_encode(array("error" => $e->getMessage()));
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
             $response = $response->withStatus(400);
         } finally {
             $response->getBody()->write($payload);
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $tiempoEstimado = Pedido::TiempoEstimadoDelPedido($codigoPedido, $codigoMesa);
-
-        // if($tiempoEstimado == -1){
-        //     $response->getBody()->write(json_encode(array("error" => "El tiempo estimado no se pudo calcular porque el pedido no esta en preparacion")));
-        //     $response->withStatus(404); 
-        // }
-        // else if($tiempoEstimado != null) {
-        //     $payload = json_encode(array("tiempoEstimado" => $tiempoEstimado));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // } else if($tiempoEstimado == 0){
-        //     $response->getBody()->write(json_encode(array("error" => "Pedido no encontrado")));
-        //     $response->withStatus(404);
-        // }
-
-        // return $response
-        //   ->withHeader('Content-Type', 'application/json');
     }
 
     public static function FinalizarProductoDePedido($request, $response, $args) {
@@ -241,22 +147,40 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
+    }
 
-        // $actualizarPedido = Pedido::FinalizarProductoDePedido($usuario);
+    public static function CancelarPedido($request, $response, $args) {
+        $body = json_decode($request->getBody());
 
-        // if($actualizarPedido == -1){
-        //     $response->getBody()->write(json_encode(array("error" => "El usuario no tiene producto pedido en preparacion")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     Pedido::ActualizarOperacion($id, $cant_operaciones);
-        //     $payload = json_encode(array("mensaje" => "Producto finalizado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // }
-        
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
+        if($body == null){
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        if(!isset($body->codigo_pedido) || !isset($body->codigo_mesa)){ // si no se envia el id
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $codigo_pedido = $body->codigo_pedido;
+        $codigo_mesa = $body->codigo_mesa;
+
+        try {
+            $result = Pedido::CancelarPedido($codigo_pedido, $codigo_mesa);
+            $payload = json_encode(array("mensaje" => "Pedido cancelado correctamente"));
+            $response = $response->withStatus(200);
+        } catch (Exception $e) {
+            $payload = json_encode(array("error" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        } finally {
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
     }
 
     public static function EliminarPedido($request, $response, $args) {
@@ -281,25 +205,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = Pedido::EliminarPedido($id);
-
-        // if($result == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 2){
-        //     $response->getBody()->write(json_encode(array("error" => "No se pudo eliminar el pedido porque esta en preparacion")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     $payload = json_encode(array("mensaje" => "Pedido eliminado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // }
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
 
@@ -373,35 +278,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = Pedido::ModificarPedido($id, $codigoAlfanumerico, $nombreCliente, $codigoMesa, $tiempoEstimado);
-
-        // if($result == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 2){
-        //     $response->getBody()->write(json_encode(array("error" => "El codigoAlfanumerico ingresado ya existe en un pedido")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 3){
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa ingresada no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 4){
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa ingresada esta ocupada")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     Pedido::ActualizarOperacion($id, $cant_operaciones);
-        //     $payload = json_encode(array("mensaje" => "Pedido modificado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // }
-
-        // // $response->getBody()->write($payload);
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
     public static function ModificarProductoPedido($request, $response, $args) {
@@ -409,7 +285,7 @@ class PedidoController {
         $token = trim(explode("Bearer", $header)[1]);
         $data = AutentificadorJWT::ObtenerData($token);
         $usuario = $data->usuario; // esto es un objeto con los datos del usuario
-        $id = $usuario->id;
+        $idUsuario = $usuario->id;
         $cant_operaciones = $usuario->cant_operaciones;
 
         $pedido = json_decode($request->getBody());
@@ -455,8 +331,8 @@ class PedidoController {
         }
         
         try {
-            $result = Pedido::ModificarProductoDePedido($id, $codigo_pedido, $id_producto, $tiempo_producto);
-            Pedido::ActualizarOperacion($id, $cant_operaciones);
+            $result = Pedido::ModificarProductoDePedido($id, $codigo_pedido, $id_producto);
+            Pedido::ActualizarOperacion($idUsuario, $cant_operaciones);
             $payload = json_encode(array("mensaje" => "Producto del pedido modificado correctamente"));
             $response = $response->withStatus(200);
         } catch (Exception $e) {
@@ -467,34 +343,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = Pedido::ModificarProductoDePedido($id, $codigo_pedido, $id_producto, $tiempo_producto);
-
-        // if($result == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 2){
-        //     $response->getBody()->write(json_encode(array("error" => "El codigo_pedido del pedido_producto no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 3){
-        //     $response->getBody()->write(json_encode(array("error" => "El id_producto del pedido_producto no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 5) {
-        //     $response->getBody()->write(json_encode(array("error" => "No se modifico ningun atributo del producto del pedido")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     Pedido::ActualizarOperacion($id, $cant_operaciones);
-        //     $payload = json_encode(array("mensaje" => "Producto del pedido modificado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // }
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
 
     }
 
@@ -568,39 +416,6 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = Pedido::ModificarEstadoPedido($id, $rol);
-
-        // if($result == 1){
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 2){
-        //     $response->getBody()->write(json_encode(array("error" => "No se pudo modificar el estado del pedido en este momento")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 3){
-        //     $response->getBody()->write(json_encode(array("error" => "Solo los socios pueden cerrar")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 5){
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa no tiene encuesta realizada")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-
-        //     if($rol != "socio"){
-        //         $id = $data->usuario->id;
-        //         $cant_operaciones = $data->usuario->cant_operaciones;
-        //         Pedido::ActualizarOperacion($id, $cant_operaciones);
-        //     }
-        //     $payload = json_encode(array("mensaje" => "Estado del pedido modificado correctamente"));
-        //     $response->getBody()->write($payload);
-        //     $response->withStatus(200);
-        // }
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
 
 
@@ -668,67 +483,7 @@ class PedidoController {
             return $response
                 ->withHeader('Content-Type', 'application/json');
         }
-
-        // $result = Pedido::RealizarEncuesta($codigo_mesa, $codigo_pedido, $puntuacion_mesa, $puntuacion_restaurante, $puntuacion_mozo, $puntuacion_cocinero, $puntuacion_bartender, $puntuacion_cervecero, $descripcion);
-    
-        // if($result == -1){
-        //     $response->getBody()->write(json_encode(array("error" => "La encuesta ya fue realizada")));
-        //     $response->withStatus(400);
-        // }
-        // else if ($result == 1) {
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no existe")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 2) {
-        //     $response->getBody()->write(json_encode(array("error" => "El pedido no fue entregado")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 3) {
-        //     // // La puntuacion del cocinero es obligatoria
-        //     $response->getBody()->write(json_encode(array("error" => "Debe puntuar al cocinero")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 4) {
-        //     // // La puntuacion del bartender es obligatoria
-        //     $response->getBody()->write(json_encode(array("error" => "Debe puntuar al bartender")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 5) {
-        //     // // La puntuacion del cervecero es obligatoria
-        //     $response->getBody()->write(json_encode(array("error" => "Debe puntuar al cervecero")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 6) {
-        //     // La mesa no esta en estado de encuesta
-        //     $response->getBody()->write(json_encode(array("error" => "La mesa no esta en estado de encuesta")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 8){
-        //     // La puntuacion del cocinero no es valida
-        //     $response->getBody()->write(json_encode(array("error" => "La puntuacion del cocinero no es valida")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 9){
-        //     // La puntuacion del bartender no es valida
-        //     $response->getBody()->write(json_encode(array("error" => "La puntuacion del bartender no es valida")));
-        //     $response->withStatus(400);
-        // }
-        // else if($result == 10){
-        //     // La puntuacion del cervecero no es valida
-        //     $response->getBody()->write(json_encode(array("error" => "La puntuacion del cervecero no es valida")));
-        //     $response->withStatus(400);
-        // }
-        // else {
-        //     $response->getBody()->write(json_encode(array("mensaje" => "Encuesta realizada correctamente")));
-        //     $response->withStatus(200);
-        // }
-
-        // return $response
-        //     ->withHeader('Content-Type', 'application/json');
     }
-    
-
-    // lista logs de empleados
 
 
     //lista cantidad de operaciones por sector (cocina, barra, cerveceria)
@@ -783,6 +538,13 @@ class PedidoController {
     }
 
     //PedidosCancelados
+    public static function MostrarPedidosCancelados($request, $response, $args) {
+        $lista = Pedido::ListaPedidosCancelados();
+
+        $response->getBody()->write(json_encode(array("Lista pedidos cancelados" => $lista)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
 
 
     public static function DescargarPDFPedidos($request, $response, $args) {

@@ -75,21 +75,26 @@ class UsuarioController {
               ->withHeader('Content-Type', 'application/json');
         }
 
-        $usuario = Persona::VerificarUsuario($email, $contrasenia);
+        try {
+            $usuario = Persona::VerificarUsuario($email, $contrasenia);
 
-        if($usuario != null) {
-            $datos = array("usuario" => $usuario); // se guarda el usuario en el token
-            $token = AutentificadorJWT::CrearToken($datos);
-            $payload = json_encode(array('jwt' => $token));
+            if($usuario != null) {
+                $datos = array("usuario" => $usuario); // se guarda el usuario en el token
+                $token = AutentificadorJWT::CrearToken($datos);
+                $payload = json_encode(array('jwt' => $token));
+                $response = $response->withStatus(201); // 201 es el codigo de status que indica que se creo un recurso
+            } else {
+                $payload = json_encode(array("error" => "Usuario no encontrado"));
+                $response = $response->withStatus(404);
+            }
+        } catch (Exception $e) {
+            $payload = json_encode(array("error" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        } finally {
             $response->getBody()->write($payload);
-            $response->withStatus(201); // 201 es el codigo de status que indica que se creo un recurso
-        } else {
-            $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
-            $response->withStatus(404);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
         }
-
-        return $response
-          ->withHeader('Content-Type', 'application/json');
 
     }
 
@@ -103,19 +108,52 @@ class UsuarioController {
               ->withHeader('Content-Type', 'application/json');
         }
 
-        $usuario = Persona::EliminarUsuario($id);
-
-        if($usuario == true) {
+        try {
+            Persona::CambiarEstadoUsuario($id, "eliminado");
             $payload = json_encode(array("mensaje" => "Usuario eliminado con exito"));
             $response->getBody()->write($payload);
-            $response->withStatus(200);
-        } else {
-            $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
-            $response->withStatus(404);
+            $response = $response->withStatus(200);
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode(array("error" => $e->getMessage())));
+            $response = $response->withStatus(400);
+        } finally {
+            return $response
+              ->withHeader('Content-Type', 'application/json');
         }
 
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ModificarEstadoUsuario($request, $response, $args) {
+        $body = json_decode($request->getBody());
+
+        if(!isset($body->id) || !isset($body->estado)) {
+            $response->getBody()->write(json_encode(array("error" => "Faltan datos")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        $id = $body->id;
+
+        if(!is_numeric($id)) {
+            $response->getBody()->write(json_encode(array("error" => "El id debe ser un numero")));
+            $response->withStatus(400);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            Persona::CambiarEstadoUsuario($id, $body->estado);
+            $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+            $response->getBody()->write($payload);
+            $response = $response->withStatus(200);
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode(array("error" => $e->getMessage())));
+            $response = $response->withStatus(400);
+        } finally {
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
     }
 
     public static function ModificarUsuario($request, $response, $args) {
@@ -146,36 +184,16 @@ class UsuarioController {
         // isset verifica si la variable esta definida y no es null, definir quiere decir que se le asigno un valor
         // acá se elimina la cuenta de uno mismo
         if(isset($cambiosUsuario->eliminarCuenta) && $cambiosUsuario->eliminarCuenta == true) {
-            $usuario = Persona::EliminarUsuario($id);
-            if($usuario == true) {
-                $payload = json_encode(array("mensaje" => "Usuario eliminado con exito"));
-                $response->getBody()->write($payload);
-                $response->withStatus(200);
-            }
-            // else {
-            //     $response->getBody()->write(json_encode(array("error" => "Usuario no encontrado")));
-            //     $response->withStatus(404);
-            // }
+            Persona::CambiarEstadoUsuario($id, "eliminado");
+            
+            $payload = json_encode(array("mensaje" => "Usuario eliminado con exito"));
+            $response->getBody()->write($payload);
+            $response->withStatus(200);
+            
             return $response
               ->withHeader('Content-Type', 'application/json');
         }
         
-        if($rol == "socio"){
-            if(isset($cambiosUsuario->id) && is_numeric($cambiosUsuario->id) && $cambiosUsuario->id != $id && isset($cambiosUsuario->estado)) {
-                $listaUsuarios = Persona::MostrarLista();
-                
-                foreach ($listaUsuarios as $usuarioDB) {
-                    if ($usuarioDB->id == $cambiosUsuario->id) {
-                        Persona::ModificarEstado($cambiosUsuario->id, $cambiosUsuario->estado);
-                        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
-                        $response->getBody()->write($payload);
-                        return $response
-                          ->withHeader('Content-Type', 'application/json');
-                    }
-                }
-            }
-        }
-
         if (isset($cambiosUsuario->nombre)) {
             $nombre = $cambiosUsuario->nombre;
         }

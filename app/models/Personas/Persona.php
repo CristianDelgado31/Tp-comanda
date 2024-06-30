@@ -49,7 +49,13 @@ class Persona {
     
         foreach ($listaUsuarios as $usuario) {
             // Verifica si el email y la contraseña coinciden
-            if ($usuario['email'] == $email && password_verify($contrasenia, $usuario['contrasenia']) && $usuario['estado'] == "activo" || $usuario['estado'] == "ocupado") {
+            if ($usuario['email'] == $email && password_verify($contrasenia, $usuario['contrasenia'])) { //&& $usuario['estado'] == "activo" || $usuario['estado'] == "ocupado"
+                if($usuario['estado'] == "eliminado") {
+                    throw new Exception("El usuario se encuentra eliminado");
+                } else if($usuario['estado'] == "suspendido") {
+                    throw new Exception("El usuario se encuentra suspendido");
+                }
+
                 $usuario['contrasenia'] = ""; // No se envia la contraseña
 
                 //agrego un log en la base de datos
@@ -64,27 +70,55 @@ class Persona {
         return null; // Devuelve null si no se encontro el usuario
     }
 
-    public static function EliminarUsuario($id) {
+    public static function CambiarEstadoUsuario($id, $estado) {
         $listaUsuarios = self::MostrarLista();
+        $idFlag = false;
 
         foreach ($listaUsuarios as $usuario) {
-            if ($usuario->id == $id) {
-
-                if($usuario->estado == "inactivo") {
-                    return false; // Si el usuario ya esta inactivo, no se puede eliminar
+            if ($usuario->id == $id) {    
+                if($estado == "activo") {
+                    if($usuario->estado == "activo") {
+                        throw new Exception("El usuario ya se encuentra activo");
+                    }
+                    self::ActivarUsuario($id);
+                } else if($estado == "suspendido") {
+                    if($usuario->estado == "suspendido") {
+                        throw new Exception("El usuario ya se encuentra suspendido");
+                    }
+                    self::SuspenderUsuario($id);
+                } else if($estado == "eliminado") {
+                    if($usuario->estado == "eliminado") {
+                        throw new Exception("El usuario ya se encuentra eliminado");
+                    }
+                    self::EliminarUsuario($id);
+                } else {
+                    throw new Exception("El estado no es valido");
                 }
-
-                $fechaBaja = date("Y-m-d");
-                $estado = "inactivo";
-                $arrUsuario = array("id" => $id, "fechaBaja" => $fechaBaja, "estado" => $estado);
-                BaseDeDatos::EliminarUsuario($arrUsuario);
-                return true;
+                $idFlag = true;
+                break;
             }
         }
 
-        return false;
+        if(!$idFlag) {
+            throw new Exception("El id usuario no existe");
+        }
     }
 
+    public static function EliminarUsuario($id) {
+        $estado = "eliminado";
+        $fechaBaja = date("Y-m-d");
+        BaseDeDatos::ModificarEstadoUsuario(array("id" => $id, "fechaBaja" => $fechaBaja, "estado" => $estado));
+    }
+
+    public static function SuspenderUsuario($id) {
+        $estado = "suspendido";
+        BaseDeDatos::ModificarEstadoUsuario(array("id" => $id, "fechaBaja" => null, "estado" => $estado));
+    }
+
+    public static function ActivarUsuario($id) {
+        $estado = "activo";
+        BaseDeDatos::ModificarEstadoUsuario(array("id" => $id, "fechaBaja" => null, "estado" => $estado));
+    }
 
     public function AgregarUsuario(){
         $nombre = $this->nombre;
@@ -108,12 +142,7 @@ class Persona {
         BaseDeDatos::ModificarAtributosUsuario($id, $nombre, $apellido, $rol, $email, $contrasenia, $estado);
     }
 
-    public static function ModificarEstado($id, $estado) {
-        $usuario = BaseDeDatos::ActualizarEstadoUsuario(array("id" => $id, "estado" => $estado));
-    }
 
-
-    
     public static function GenerarHtmlDeUsuarios() {
         $usuarios = self::MostrarLista();
         $html = '<h1>Lista de Usuarios</h1>';

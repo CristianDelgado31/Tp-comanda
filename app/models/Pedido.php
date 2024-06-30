@@ -199,12 +199,13 @@ class Pedido {
             throw new Exception("El pedido_producto ingresado no existe");
             // return 5; // El pedido_producto ingresado no existe
         }
-
+        
         if(self::verificarPermisos($id_pedido_producto, $id_usuario) == 1){
             throw new Exception("El rol del usuario no tiene permisos para tomarlo");
             // return 1; // El rol del usuario no tiene permisos para tomarlo
         }
- 
+        
+        //Esto no hace falta porque ya se verifico que el usuario existe en un middleware
         if($id_usuario == 0){
             throw new Exception("El empleado/usuario no existe");
             // return -1; // El empleado/usuario no existe
@@ -213,7 +214,7 @@ class Pedido {
         foreach ($listaPedidosProductos as $pedidoProducto) { // pedidoProducto es un array asociativo
             if (intval($pedidoProducto['id']) == $id_pedido_producto) {
                 if($pedidoProducto['estado'] != "pendiente"){
-                    throw new Exception("El pedido_producto ya fue tomado por otro usuario");
+                    throw new Exception("El pedido_producto ya fue tomado por un usuario");
                     // return 2; // El pedido_producto ya fue tomado por otro usuario
                 }
                 $pedidoProducto['estado'] = $estado;
@@ -292,6 +293,13 @@ class Pedido {
         foreach ($listaPedidos as $pedido) {
             if ($pedido['codigoAlfanumerico'] == $codigoPedido && $pedido['codigoMesa'] == $codigoMesa) {
                 // Verificar si $pedido['tiempoEstimado'] es null
+                if($pedido['estado'] == "entregado"){
+                    throw new Exception("El pedido ya fue entregado");
+                }
+                if($pedido['estado'] == "pendiente"){
+                    throw new Exception("El pedido no fue tomado por ningun empleado, no se puede calcular el tiempo estimado");
+                }
+
                 if (!is_null($pedido['tiempoEstimado'])) {
                     $tiempoEstimado = $pedido['tiempoEstimado'];
                 } else {
@@ -311,10 +319,9 @@ class Pedido {
             // return -1; // El tiempo estimado es nulo (no se ha calculado)
         }
     
-        return $tiempoEstimado;
+        return $tiempoEstimado . " minutos";
     }
     
-
     public static function FinalizarProductoDePedido($usuario) {
         $listaPedidosProductos = BaseDeDatos::ListarPedidosProductos();
         $registroProductoPedido = null;
@@ -358,6 +365,39 @@ class Pedido {
 
         $arrUsuario = array("id" => $usuario->id, "estado" => "activo"); // libre
         BaseDeDatos::ActualizarEstadoUsuario($arrUsuario); // Actualizar el estado del usuario
+    }
+    
+    public static function CancelarPedido($codigo_pedido, $codigo_mesa) {
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $flag = false;
+        $flagEstado = false;
+        $id = 0;
+
+        foreach ($listaPedidos as $pedido) {
+            if ($pedido['codigoAlfanumerico'] == $codigo_pedido && $pedido['codigoMesa'] == $codigo_mesa) {
+                if($pedido['estado'] == "en preparacion"){
+                    $flagEstado = true; // No se puede cancelar un pedido en preparacion
+                }
+                $flag = true;
+                $id = $pedido['id'];
+                break;
+            }
+        }
+
+        if(!$flag){
+            throw new Exception("El pedido no existe");
+            // return 1; // El pedido no existe
+        }
+
+        if($flagEstado){
+            throw new Exception("No se puede cancelar un pedido en preparacion");
+            // return 2; // No se puede cancelar un pedido en preparacion
+        }
+
+        // $fechaBaja = date("Y-m-d");
+        // BaseDeDatos::EliminarPedido($id, $fechaBaja);
+        BaseDeDatos::ModificarEstadoMesa($codigo_mesa, "libre");
+        BaseDeDatos::ModificarEstadoPedido($id, "cancelado");
     }
 
     public static function EliminarPedido($id) {
@@ -511,13 +551,11 @@ class Pedido {
             $codigo_pedidoAnterior == $pedidoProductoAModificar['codigo_pedido'] && $id_producto == "" || 
             $codigo_pedido == "" && $id_productoAnterior == $pedidoProductoAModificar['id_producto']){
             throw new Exception("No se modifico ningun atributo");
-            // return 5; // No se modifico ningun atributo
         }
 
 
         if(!$flagId){
             throw new Exception("El pedido_producto no existe");
-            // return 1; // El pedido_producto no existe
         }
 
         //verifico que exista un codigo_pedido identico en un registro de pedidos
@@ -528,10 +566,16 @@ class Pedido {
 
         foreach ($listaPedidos as $pedido) {
             if ($pedido['codigoAlfanumerico'] == $pedidoProductoAModificar['codigo_pedido']) {
-                //si funciona todo quiero esto comentado
-                // if($pedido['estado'] == "pendiente" || $pedido['estado'] == "en preparacion"){
-                //     return 6; // No se puede modificar un pedido en preparacion
-                // }
+                
+                if($pedido['fecha_baja'] != null){
+                    throw new Exception("El pedido fue eliminado, no se puede modificar");
+                }
+                if($pedido['estado'] == "cancelado") {
+                    throw new Exception("No se puede modificar un pedido cancelado");
+                }
+                if($pedido['estado'] == "entregado") {
+                    throw new Exception("No se puede modificar un pedido entregado");
+                }
 
                 $flagCodigoPedido = true;
                 $pedidoNuevo = $pedido; // guardo el pedido nuevo        
@@ -545,7 +589,6 @@ class Pedido {
 
         if(!$flagCodigoPedido){
             throw new Exception("El codigo_pedido del pedido_producto no existe");
-            // return 2; // El codigo_pedido del pedido_producto no existe
         }
 
         //verifico que exista un id_producto identico en un registro de productos si se modifico
@@ -558,7 +601,6 @@ class Pedido {
             if ($producto['id'] == $pedidoProductoAModificar['id_producto']) {
                 $flagIdProducto = true;
                 $productoEncontrado = $producto;
-                // break;
             }
 
             if($id_productoAnterior == $producto['id']){
@@ -569,7 +611,6 @@ class Pedido {
 
         if(!$flagIdProducto){
             throw new Exception("El id_producto del pedido_producto no existe");
-            // return 3; // El id_producto del pedido_producto no existe
         }
         
         $precioProducto = $productoEncontrado['precio'];
@@ -687,6 +728,10 @@ class Pedido {
 
         foreach ($listaPedidos as $pedido) {
             if ($pedido['id'] == $id && $pedido['fecha_baja'] == null) {
+                if($pedido['estado'] == "cancelado"){
+                    throw new Exception("No se puede modificar un pedido cancelado");
+                }
+
                 $pedidoAModificar = $pedido; // Guardar el pedido para devolverlo
                 $flag = true;
                 break;
@@ -708,7 +753,7 @@ class Pedido {
                 break;
             }
         }
-        
+
         if($pedidoAModificar['estado'] == "listo para servir" && $mesaEncontrada['estado'] == "con cliente esperando pedido" && $rol == "mozo"){
             $pedidoAModificar['estado'] = "entregado";
             $mesaEncontrada['estado'] = "con cliente comiendo";
@@ -1045,7 +1090,18 @@ class Pedido {
         return $html;
     }
     
+    public static function ListaPedidosCancelados(){
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $pedidosCancelados = [];
     
+        foreach($listaPedidos as $pedido){
+            if($pedido['estado'] == "cancelado"){
+                $pedidosCancelados[] = $pedido;
+            }
+        }
+    
+        return $pedidosCancelados;
+    }  
 }
 
 ?>
