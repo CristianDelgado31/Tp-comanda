@@ -1,5 +1,6 @@
 <?php
 require_once 'models/Producto.php';
+// use TCPDF;
 
 class ProductoController {
 
@@ -73,24 +74,20 @@ class ProductoController {
 
         $producto = new Producto($body['nombre'], $body['tipo'], $body['precio']);
         $producto->id = $body['id'];
-        $result = $producto->ModificarProducto();
 
-        if($result === true){
+        try {
+            $producto->ModificarProducto();
             $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
             $response->withStatus(200);
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
         }
-        else if($result === false){
-            $payload = json_encode(array("mensaje" => "El producto ya existe con ese nombre (id diferente)"));
-            $response->withStatus(400);
+        finally {
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
         }
-        else if($result === -1){
-            $payload = json_encode(array("mensaje" => "No existe el id"));
-            $response->withStatus(400);
-        }
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
 
     }
 
@@ -104,21 +101,19 @@ class ProductoController {
               ->withStatus(400);
         }
 
-        $result = Producto::EliminarProducto($id);
-
-        if($result === true){
+        try {
+            $result = Producto::EliminarProducto($id);
             $payload = json_encode(array("mensaje" => "Producto eliminado con exito"));
+            $response->withStatus(200);
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
         }
-        else if($result === false){
-            $payload = json_encode(array("mensaje" => "El producto ya fue dado de baja anteriormente"));
+        finally {
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
         }
-        else {
-            $payload = json_encode(array("mensaje" => "No existe el id"));
-        }
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
 
     }
 
@@ -165,6 +160,25 @@ class ProductoController {
           ->withHeader('Content-Type', 'application/json')
           ->withStatus(201);
     }
+
+    public static function DescargarPDFProductos($request, $response, $args){
+        $pdf = new TCPDF();
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 12);
+
+        $lista = Producto::GenerarHtmlDeProductos();
+        $pdf->writeHTML($lista, true, false, true, false, '');
+
+        $pdfOutput = $pdf->Output('productos.pdf', 'S');
+
+        $response = $response->withHeader('Content-Type', 'application/pdf')
+                             ->withHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
+
+        $response->getBody()->write($pdfOutput);
+
+        return $response;
+    }
+    
 }
 
 

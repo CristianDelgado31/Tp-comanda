@@ -55,7 +55,7 @@ class Persona {
                 //agrego un log en la base de datos
                 $fecha = date("Y-m-d");
                 $hora = date("H:i:s");
-                BaseDeDatos::AgregarLog($usuario['id'], $fecha, $hora);
+                // BaseDeDatos::AgregarLog($usuario['id'], $fecha, $hora); // ¡¡Descomentar cuando termine de testear otras cosas!!
 
                 return $usuario; // Devuelve un array asociativo
             }
@@ -111,6 +111,29 @@ class Persona {
     public static function ModificarEstado($id, $estado) {
         $usuario = BaseDeDatos::ActualizarEstadoUsuario(array("id" => $id, "estado" => $estado));
     }
+
+
+    
+    public static function GenerarHtmlDeUsuarios() {
+        $usuarios = self::MostrarLista();
+        $html = '<h1>Lista de Usuarios</h1>';
+        $html .= '<table border="1" width="100%">';
+        $html .= '<tr><th>Nombre</th><th>Apellido</th><th>Rol</th><th>Email</th><th>Estado</th></tr>';
+        
+        foreach ($usuarios as $usuario) {
+            $html .= '<tr>';
+            $html .= '<td>' . $usuario->nombre . '</td>';
+            $html .= '<td>' . $usuario->apellido . '</td>';
+            $html .= '<td>' . $usuario->rol . '</td>';
+            $html .= '<td>' . $usuario->email . '</td>';
+            $html .= '<td>' . $usuario->estado . '</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '</table>';
+        return $html;
+    }
+    
 }
 
 

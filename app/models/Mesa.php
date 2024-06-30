@@ -62,26 +62,30 @@ class Mesa {
     }
 
 
-    public static function ModificarMesa($idMesa, $codigoIdentificacion){
+    public static function ModificarMesa($idMesa, $codigoIdentificacion){ //Este codigo es el nuevo codigo de identificacion si se quiere modificar
         $listaMesa = BaseDeDatos::ListarMesas();
         $mesaResult = Mesa::VerificarMesaPorId($idMesa);
 
         if(!$mesaResult){
-            return 2; // La mesa no existe
+            throw new Exception('La mesa no existe');
+            // return 2; // La mesa no existe
         }
 
         if($mesaResult['estado'] != 'libre'){
-            return 1; // La mesa no esta libre para modificar
+            throw new Exception('La mesa no esta libre para modificar');
+            // return 1; // La mesa no esta libre para modificar
         }
 
         foreach ($listaMesa as $mesa) {
             if ($mesa['codigoIdentificacion'] == $codigoIdentificacion) {
-                return 3; // La mesa ya existe
+                throw new Exception('La mesa ya existe');
+                // return 3; // La mesa ya existe
             }
         }
 
+        // Si llega a este punto, la mesa puede ser modificada
         BaseDeDatos::ModificarMesa($idMesa, $codigoIdentificacion);
-        return 0; // La mesa fue modificada
+        // return true; // La mesa fue modificada
     }
 
     public static function MostrarLaMesaUsada($criterio) {
@@ -251,6 +255,49 @@ class Mesa {
     
         return $facturacionTotal;
     }
+
+    public static function GenerarHtmlDeMesas() {
+        $listaMesas = self::MostrarLista();
+    
+        // Utilizando heredoc para una mejor legibilidad
+        $html = <<<HTML
+        <style>
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Código de Identificación</th>
+                <th>Estado</th>
+                <th>Fecha de Baja</th>
+            </tr>
+        HTML;
+    
+        foreach ($listaMesas as $mesa) {
+            $html .= '<tr>';
+            $html .= '<td>' . htmlspecialchars($mesa->id) . '</td>';
+            $html .= '<td>' . htmlspecialchars($mesa->codigoIdentificacion) . '</td>';
+            $html .= '<td>' . htmlspecialchars($mesa->estado) . '</td>';
+            $html .= '<td>' . htmlspecialchars($mesa->fechaBaja) . '</td>';
+            $html .= '</tr>';
+        }
+    
+        $html .= '</table>';
+    
+        return $html;
+    }
+    
     
 }
 

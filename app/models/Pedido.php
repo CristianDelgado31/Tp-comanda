@@ -44,19 +44,15 @@ class Pedido {
     public static function ListarPedidosProductos($rol) {
 
         $arrUsuarios = array(
-            "cocinero" => array("comida"), //postres?
+            "cocinero" => array("comida", "postre"), //postres
             "bartender" => array("trago", "vino"),
             "cervecero" => array("cerveza")
         );
 
-        // // faltan los mozos y socios
-        // if($rol != "cocinero" && $rol != "bartender" && $rol != "cervecero"){
-        //     return 0; // El rol ingresado no existe
-        // }
-
         // Verifica si el rol no está en el arreglo
         if (!array_key_exists($rol, $arrUsuarios)) {
-            return 0; // El rol ingresado no existe
+            throw new Exception("El rol ingresado no existe");
+            // return 0; // El rol ingresado no existe
         }
 
         $listaPedidosProductos= BaseDeDatos::ListarPedidosProductos();
@@ -74,7 +70,8 @@ class Pedido {
         }
 
         if(count($listaResult) == 0){
-            return 1; // No hay pedidos pendientes
+            throw new Exception("No hay pedidos pendientes");
+            // return 1; // No hay pedidos pendientes
         }
 
         return $listaResult;
@@ -88,7 +85,8 @@ class Pedido {
         foreach ($listaMesas as $mesa) {
             if ($mesa['codigoIdentificacion'] == $this->codigoMesa && $mesa['fecha_baja'] == null) {
                 if($mesa['estado'] != "libre"){
-                    return -3; // La mesa no esta libre
+                    throw new Exception("La mesa no esta libre");
+                    // return -3; // La mesa no esta libre
                 }
                 $flagMesa = true;
                 break;
@@ -99,7 +97,8 @@ class Pedido {
         }
 
         if(!$flagMesa){ // si es false es porque no encontro la mesa
-            return -1; // La mesa no existe
+            throw new Exception("La mesa no existe");
+            // return -1; // La mesa no existe
         }
 
         //buscar si existe el pedido
@@ -107,7 +106,8 @@ class Pedido {
 
         foreach ($listaPedidos as $pedido) {
             if ($pedido['codigoAlfanumerico'] == $this->codigoAlfanumerico) {
-                return -2; // El codigoAlfanumerico del pedido ya existe
+                throw new Exception("El codigoAlfanumerico del pedido ya existe");
+                // return -2; // El codigoAlfanumerico del pedido ya existe
             }
         }
 
@@ -125,7 +125,8 @@ class Pedido {
                 }
             }
             if(!$flagProducto){ // si es false es porque no encontro el producto
-                return -4; // Error -> No se guarda el pedido porque un producto no existe
+                throw new Exception("El producto no existe");
+                // return -4; // Error -> No se guarda el pedido porque un producto no existe
             }
         }
 
@@ -164,18 +165,18 @@ class Pedido {
         }
     }
 
-    public static function AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion){ //nombre, $apellido
+    public static function AgarrarProductoDePedido($email, $id_pedido_producto, $estado, $tiempoPreparacion){
         $id_usuario = 0;
         $listaEmpleados = BaseDeDatos::ListarUsuarios();
         $flag = false;
         $empleadoEncontrado = null; // para guardar el empleado que agarra el pedido_producto
 
         foreach ($listaEmpleados as $empleado) { // empleado es un array asociativo
-            //$empleado['nombre'] == $nombre && $empleado['apellido'] == $apellido
             if ($empleado['email'] == $email) { 
                 // si el empleado esta ocupado no se le permitira agarrar un pedido_producto
                 if($empleado['estado'] == "ocupado"){
-                    return 4; // El empleado esta ocupado
+                    throw new Exception("El empleado esta ocupado");
+                    // return 4; // El empleado esta ocupado
                 }
                 $id_usuario = $empleado['id'];
                 break;
@@ -195,21 +196,25 @@ class Pedido {
         }
 
         if(!$existeIdProducto){
-            return 5; // El pedido_producto ingresado no existe
+            throw new Exception("El pedido_producto ingresado no existe");
+            // return 5; // El pedido_producto ingresado no existe
         }
 
         if(self::verificarPermisos($id_pedido_producto, $id_usuario) == 1){
-            return 1; // El rol del usuario no tiene permisos para tomarlo
+            throw new Exception("El rol del usuario no tiene permisos para tomarlo");
+            // return 1; // El rol del usuario no tiene permisos para tomarlo
         }
  
         if($id_usuario == 0){
-            return -1; // El empleado/usuario no existe
+            throw new Exception("El empleado/usuario no existe");
+            // return -1; // El empleado/usuario no existe
         }
 
         foreach ($listaPedidosProductos as $pedidoProducto) { // pedidoProducto es un array asociativo
             if (intval($pedidoProducto['id']) == $id_pedido_producto) {
                 if($pedidoProducto['estado'] != "pendiente"){
-                    return 2; // El pedido_producto ya fue tomado por otro usuario
+                    throw new Exception("El pedido_producto ya fue tomado por otro usuario");
+                    // return 2; // El pedido_producto ya fue tomado por otro usuario
                 }
                 $pedidoProducto['estado'] = $estado;
                 $pedidoProducto['id_usuario'] = $id_usuario;
@@ -244,7 +249,7 @@ class Pedido {
     
         // Definir los permisos por rol
         $arrUsuarios = array(
-            "cocinero" => array("comida", "postres"), // Añadir "postres" si corresponde
+            "cocinero" => array("comida", "postre"), // Añadir "postre" si corresponde
             "bartender" => array("trago", "vino"),
             "cervecero" => array("cerveza")
         );
@@ -258,10 +263,10 @@ class Pedido {
             }
         }
 
-        // Verificar si el rol no está en el arreglo
-        if (!array_key_exists($rol, $arrUsuarios)) {
-            return 0; // El rol ingresado no existe
-        }
+        // // Verificar si el rol no está en el arreglo
+        // if (!array_key_exists($rol, $arrUsuarios)) {
+        //     return -1; // El rol ingresado no existe
+        // }
 
         // Verificar si el producto pertenece al rol del usuario
         foreach ($listaPedidosProductos as $pedidoProducto) {
@@ -298,10 +303,12 @@ class Pedido {
         }
     
         if($tiempoEstimado == 0) {
-            return 0; // El pedido no existe
+            throw new Exception("El pedido no existe");
+            // return 0; // El pedido no existe
         }
         else if($tiempoEstimado == -1){
-            return -1; // El tiempo estimado es nulo (no se ha calculado)
+            throw new Exception("El tiempo estimado es nulo (no se ha calculado)");
+            // return -1; // El tiempo estimado es nulo (no se ha calculado)
         }
     
         return $tiempoEstimado;
@@ -322,7 +329,8 @@ class Pedido {
         }
 
         if ($registroProductoPedido === null) {
-            return -1; //El usuario no tiene productos de pedido en preparación
+            throw new Exception("El usuario no tiene productos de pedido en preparación");
+            // return -1; //El usuario no tiene productos de pedido en preparación
         }
 
         $listaPedidos = BaseDeDatos::ListarPedidos();
@@ -341,10 +349,8 @@ class Pedido {
                 if ($pedido['codigoAlfanumerico'] == $registroProductoPedido['codigo_pedido']) {
                     $pedido['estado'] = "listo para servir";
                     BaseDeDatos::ActualizarPedido($pedido); // Actualizar el estado del pedido
-                    // BaseDeDatos::ModificarEstadoMesa($pedido['codigoMesa'], "con cliente comiendo");
                     $tiempo = date('H:i:s');
                     BaseDeDatos::ModificarHoraEnPedido($pedido['id'], $tiempo, "fin");
-                    
                     break;
                 }
             }
@@ -372,11 +378,13 @@ class Pedido {
         }
 
         if(!$flag){
-            return 1; // El pedido no existe
+            throw new Exception("El pedido no existe");
+            // return 1; // El pedido no existe
         }
 
         if($flagEstado){
-            return 2; // No se puede eliminar un pedido en preparacion
+            throw new Exception("No se puede eliminar un pedido en preparacion"); //dudoso esto
+            // return 2; // No se puede eliminar un pedido en preparacion
         }
         $fecha_baja = date("Y-m-d");
         BaseDeDatos::EliminarPedido($id, $fecha_baja);
@@ -415,14 +423,16 @@ class Pedido {
         }
 
         if(!$flag){
-            return 1; // El pedido no existe
+            throw new Exception("El pedido no existe");
+            // return 1; // El pedido no existe
         }
         
         if($codigoAlfanumerico != ""){
             // Verifico si realmente no hay otro codigo alfanumerico en la base de datos
             foreach ($listaPedidos as $pedido) {
                 if ($pedido['codigoAlfanumerico'] == $pedidoAModificar['codigoAlfanumerico'] && $pedido['id'] != $pedidoAModificar['id']) {
-                    return 2; // El codigoAlfanumerico del pedido ya existe en otro pedido
+                    throw new Exception("El codigoAlfanumerico del pedido ya existe en otro pedido");
+                    // return 2; // El codigoAlfanumerico del pedido ya existe en otro pedido
                 }
             }
 
@@ -448,7 +458,8 @@ class Pedido {
 
                 if ($mesa['codigoIdentificacion'] == $pedidoAModificar['codigoMesa'] && $mesa['fecha_baja'] == null) {
                     if($mesa['estado'] != "libre"){
-                        return 4; // La mesa no esta libre
+                        throw new Exception("La mesa no esta libre");
+                        // return 4; // La mesa no esta libre
                     }
                     $flagMesa = true;
                     // break;
@@ -456,7 +467,8 @@ class Pedido {
             }
     
             if(!$flagMesa){ // si es false es porque no encontro la mesa
-                return 3; // La mesa no existe
+                throw new Exception("La mesa no existe");
+                // return 3; // La mesa no existe
             }
             
             //modifico el estado de la mesa nueva
@@ -498,12 +510,14 @@ class Pedido {
         if($codigo_pedidoAnterior == $pedidoProductoAModificar['codigo_pedido'] && $id_productoAnterior == $pedidoProductoAModificar['id_producto'] || 
             $codigo_pedidoAnterior == $pedidoProductoAModificar['codigo_pedido'] && $id_producto == "" || 
             $codigo_pedido == "" && $id_productoAnterior == $pedidoProductoAModificar['id_producto']){
-            return 5; // No se modifico ningun atributo
+            throw new Exception("No se modifico ningun atributo");
+            // return 5; // No se modifico ningun atributo
         }
 
 
         if(!$flagId){
-            return 1; // El pedido_producto no existe
+            throw new Exception("El pedido_producto no existe");
+            // return 1; // El pedido_producto no existe
         }
 
         //verifico que exista un codigo_pedido identico en un registro de pedidos
@@ -530,7 +544,8 @@ class Pedido {
         }
 
         if(!$flagCodigoPedido){
-            return 2; // El codigo_pedido del pedido_producto no existe
+            throw new Exception("El codigo_pedido del pedido_producto no existe");
+            // return 2; // El codigo_pedido del pedido_producto no existe
         }
 
         //verifico que exista un id_producto identico en un registro de productos si se modifico
@@ -553,7 +568,8 @@ class Pedido {
         }
 
         if(!$flagIdProducto){
-            return 3; // El id_producto del pedido_producto no existe
+            throw new Exception("El id_producto del pedido_producto no existe");
+            // return 3; // El id_producto del pedido_producto no existe
         }
         
         $precioProducto = $productoEncontrado['precio'];
@@ -678,7 +694,8 @@ class Pedido {
         }
 
         if(!$flag){
-            return 1; // El pedido no existe
+            throw new Exception("El pedido no existe");
+            // return 1; // El pedido no existe
         }
 
         $mesaEncontrada = null; // para guardar la mesa del pedido
@@ -703,13 +720,16 @@ class Pedido {
             $mesaEncontrada['estado'] = "cerrada";
         }
         else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol == "socio" && $mesaEncontrada['encuesta_realizada'] == 0){
-            return 5; // La mesa no tiene encuesta realizada
+            throw new Exception("La mesa no tiene encuesta realizada");
+            // return 5; // La mesa no tiene encuesta realizada
         }
         else if($pedidoAModificar['estado'] == "entregado" && $mesaEncontrada['estado'] == "con cliente pagando" && $rol != "socio"){
-            return 3; // Solo un socio puede cerrar la mesa
+            throw new Exception("Solo un socio puede cerrar la mesa");
+            // return 3; // Solo un socio puede cerrar la mesa
         }
         else {
-            return 2; // No se puede modificar el estado del pedido en este momento
+            throw new Exception("No se puede modificar el estado del pedido en este momento");
+            // return 2; // No se puede modificar el estado del pedido en este momento
         }
 
         
@@ -726,7 +746,8 @@ class Pedido {
         $existeEncuesta = self::VerificarEncuesta($codigo_mesa, $codigo_pedido);
 
         if($existeEncuesta){ // si es true es porque ya existe la encuesta
-            return -1; // La encuesta ya fue realizada
+            throw new Exception("La encuesta ya fue realizada");
+            // return -1; // La encuesta ya fue realizada
         }
 
         $listaPedidos = BaseDeDatos::ListarPedidos();
@@ -742,11 +763,13 @@ class Pedido {
         }
 
         if(!$flag){
-            return 1; // El pedido no existe
+            throw new Exception("El pedido no existe");
+            // return 1; // El pedido no existe
         }
 
         if($pedidoAModificar['estado'] != "entregado"){
-            return 2; // El pedido no fue entregado
+            throw new Exception("El pedido no fue entregado");
+            // return 2; // El pedido no fue entregado
         }
 
         //verico si las puntuciones de cocina, bartender y cervecero son validas
@@ -776,23 +799,28 @@ class Pedido {
         }
 
         if(!$flagCocinero && $puntuacion_cocinero != null){
-            return 8; // La puntuacion del cocinero no es valida
+            throw new Exception("La puntuacion del cocinero no es valida");
+            // return 8; // La puntuacion del cocinero no es valida
         }
         if(!$flagBartender && $puntuacion_bartender != null){
-            return 9; // La puntuacion del bartender no es valida
+            throw new Exception("La puntuacion del bartender no es valida");
+            // return 9; // La puntuacion del bartender no es valida
         }
         if(!$flagCervecero && $puntuacion_cervecero != null){
-            return 10; // La puntuacion del cervecero no es valida
+            throw new Exception("La puntuacion del cervecero no es valida");
+            // return 10; // La puntuacion del cervecero no es valida
         }
-
         if($flagCocinero && $puntuacion_cocinero == null){
-            return 3; // La puntuacion del cocinero es obligatoria
+            throw new Exception("La puntuacion del cocinero es obligatoria");
+            // return 3; // La puntuacion del cocinero es obligatoria
         }
         if($flagBartender && $puntuacion_bartender == null){
-            return 4; // La puntuacion del bartender es obligatoria
+            throw new Exception("La puntuacion del bartender es obligatoria");
+            // return 4; // La puntuacion del bartender es obligatoria
         }
         if($flagCervecero && $puntuacion_cervecero == null){
-            return 5; // La puntuacion del cervecero es obligatoria
+            throw new Exception("La puntuacion del cervecero es obligatoria");
+            // return 5; // La puntuacion del cervecero es obligatoria
         }
 
         //verifico que exista la mesa y que este en estado de encuesta
@@ -801,7 +829,8 @@ class Pedido {
         foreach ($listaMesas as $mesa) {
             if ($mesa['codigoIdentificacion'] == $codigo_mesa && $mesa['fecha_baja'] == null) {
                 if($mesa['estado'] != "con cliente pagando"){
-                    return 6; // La mesa no esta en estado de encuesta
+                    throw new Exception("La mesa no esta en un estado para realizar la encuesta");
+                    // return 6; // La mesa no esta en estado de encuesta
                 }
                 break;
             }
@@ -985,6 +1014,35 @@ class Pedido {
         }
     
         return $pedidosMalDeTiempo;
+    }
+    
+    public static function GenerarHtmlDePedidos() {
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        
+        // Utiliza heredoc para una mejor legibilidad y manejo de HTML
+        $html = <<<HTML
+        <h1>Pedidos</h1>
+        <style>
+        div {
+            border: 1px solid black;
+            margin: 10px;
+            padding: 10px;
+        }
+        </style>
+        HTML;
+        
+        foreach($listaPedidos as $pedido){
+            $html .= "<div>";
+            $html .= "<p>Código alfanumérico: " . htmlspecialchars($pedido['codigoAlfanumerico']) . "</p>";
+            $html .= "<p>Nombre del cliente: " . htmlspecialchars($pedido['nombreCliente']) . "</p>";
+            $html .= "<p>Código de la mesa: " . htmlspecialchars($pedido['codigoMesa']) . "</p>";
+            $html .= "<p>Estado: " . htmlspecialchars($pedido['estado']) . "</p>";
+            $html .= "<p>Tiempo estimado: " . htmlspecialchars($pedido['tiempoEstimado']) . "</p>";
+            $html .= "<p>Precio final: " . htmlspecialchars($pedido['precioFinal']) . "</p>";
+            $html .= "</div>";
+        }
+    
+        return $html;
     }
     
     

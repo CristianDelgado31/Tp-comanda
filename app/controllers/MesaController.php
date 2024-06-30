@@ -1,5 +1,6 @@
 <?php
 require_once 'models/Mesa.php';
+// use TCPDF;
 
 class MesaController {
 
@@ -99,28 +100,22 @@ class MesaController {
         }
 
         $codigoIdentificacion = $body['codigoIdentificacion'];
-        $result = Mesa::ModificarMesa($id, $codigoIdentificacion);
 
-        if($result == 1){
-            $payload = json_encode(array("mensaje" => "La mesa no esta libre para modificar"));
-            $response->withStatus(400);
-        }
-        else if($result == 2){
-            $payload = json_encode(array("mensaje" => "La mesa no existe"));
-            $response->withStatus(400);
-        }
-        else if($result == 3){
-            $payload = json_encode(array("mensaje" => "La mesa ya existe"));
-            $response->withStatus(400);
-        }
-        else {
+        try {
+            Mesa::ModificarMesa($id, $codigoIdentificacion);
+            // si no se lanza una excepcion, la mesa se modifico con exito
             $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
+            $response = $response->withStatus(200);
+    
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        } finally {
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
         }
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
     }
 
 
@@ -258,6 +253,23 @@ class MesaController {
         $response->getBody()->write($payload);
         return $response
           ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function DescargarPDFMesas($request, $response, $args){
+        $pdf = new TCPDF();
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 12);
+
+        $html = Mesa::GenerarHtmlDeMesas();
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdfOutput = $pdf->Output('mesas.pdf', 'S');
+
+        $response = $response->withHeader('Content-Type', 'application/pdf')
+                             ->withHeader('Content-Disposition', 'attachment; filename="mesas.pdf"');
+
+        $response->getBody()->write($pdfOutput);
+
+        return $response;
     }
 }
 

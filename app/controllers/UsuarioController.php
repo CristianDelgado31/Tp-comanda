@@ -3,6 +3,8 @@
 require_once 'models/Personas/Empleado.php';
 require_once 'models/Personas/Socio.php';
 
+// use TCPDF;
+
 class UsuarioController {
 
     public static function AgregarUsuario($request, $response, $args) { // $empleado es un objeto JSON
@@ -309,6 +311,29 @@ class UsuarioController {
         }
     }
     
+
+    public static function DescargarPDFUsuarios($request, $response, $args) {
+        // Crea una nueva instancia de TCPDF
+        $pdf = new TCPDF();
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 12);
+
+        // Genera el contenido HTML para el PDF
+        $html = Persona::GenerarHtmlDeUsuarios();
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        // Salida como cadena
+        $pdfOutput = $pdf->Output('usuarios.pdf', 'S'); // S: Devuelve el documento como una cadena
+
+        // Configura la respuesta
+        $response = $response->withHeader('Content-Type', 'application/pdf')
+                             ->withHeader('Content-Disposition', 'attachment; filename="usuarios.pdf"')
+                             ->withHeader('Content-Length', strlen($pdfOutput));
+
+        $response->getBody()->write($pdfOutput);
+
+        return $response;
+    }
     
 }
 

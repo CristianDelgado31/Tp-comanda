@@ -43,36 +43,35 @@ class Producto {
         return false; // El producto no existe
     }
 
-    public function ModificarProducto(){
-        $flagId = false;
-        $flagNombre = false;
+    public function ModificarProducto() {
         $listaProductos = self::MostrarLista();
+        $productoExistente = null;
+        $nombreDuplicado = false;
+    
         foreach ($listaProductos as $producto) {
-            if ($producto->nombre == $this->nombre) {
-                if($producto->id == $this->id){
-                    BaseDeDatos::ModificarProducto($this->id, $this->nombre, $this->tipo, $this->precio);
-                    return true; // Producto modificado
-                }
-                else{
-                    $flagNombre = true;
-                }
+            if ($producto->id == $this->id) {
+                $productoExistente = $producto;
             }
-            if($producto->id == $this->id){
-                $flagId = true;
+            if ($producto->nombre == $this->nombre && $producto->id != $this->id) {
+                $nombreDuplicado = true;
             }
         }
-        
-        if($flagId == false){
-            return -1; // No existe el id
+    
+        if ($productoExistente === null) {
+            throw new Exception("No existe el ID");
+            // return -1; // No existe el ID
         }
-        else if($flagNombre == true){
-            return false; // El producto ya existe con ese nombre (id diferente)
+    
+        if ($nombreDuplicado) {
+            throw new Exception("El producto ya existe con ese nombre (ID diferente)");
+            // return false; // El producto ya existe con ese nombre (ID diferente)
         }
-
-        // Si llega hasta acá es porque no encontró el producto con ese nombre y el id es correcto
+    
+        // Si llega hasta acá, el producto existe y no hay duplicado de nombre
         BaseDeDatos::ModificarProducto($this->id, $this->nombre, $this->tipo, $this->precio);
-        return true; // Producto modificado
+        // return true; // Producto modificado
     }
+    
 
     public static function EliminarProducto($id){
         $listaProductos = self::MostrarLista();
@@ -89,14 +88,36 @@ class Producto {
         }
 
         if($flag == false){
-            return -1; // No existe el id
+            throw new Exception("No existe el ID");
+            // return -1; // No existe el id
         }
         else if($flagFechaBaja == true){
-            return false; // El producto ya fue dado de baja
+            throw new Exception("El producto ya fue dado de baja anteriormente");
+            // return false; // El producto ya fue dado de baja
         }
         $fecha_baja = date('Y-m-d');
         BaseDeDatos::EliminarProducto($id, $fecha_baja);
-        return true; // Producto eliminado
+        // return true; // Producto eliminado
+    }
+
+    public static function GenerarHtmlDeProductos(){
+        $listaProductos = self::MostrarLista();
+        $html = '<h1>Lista de Productos</h1>';
+        $html .= '<table border="1" width="100%">';
+        $html .= '<tr><th>Nombre</th><th>Tipo</th><th>Precio</th></tr>';
+        foreach ($listaProductos as $producto) {
+            $html .= '<tr>';
+            // $html .= '<td>' . $producto->id . '</td>';
+            $html .= '<td>' . $producto->nombre . '</td>';
+            $html .= '<td>' . $producto->tipo . '</td>';
+            $html .= '<td>' . $producto->precio . '</td>';
+            // $html .= '<td>' . $producto->fecha_baja . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+
+        return $html;
     }
 }
 
