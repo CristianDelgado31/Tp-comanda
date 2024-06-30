@@ -61,7 +61,7 @@ class Persona {
                 //agrego un log en la base de datos
                 $fecha = date("Y-m-d");
                 $hora = date("H:i:s");
-                // BaseDeDatos::AgregarLog($usuario['id'], $fecha, $hora); // ¡¡Descomentar cuando termine de testear otras cosas!!
+                BaseDeDatos::AgregarLog($usuario['id'], $fecha, $hora);
 
                 return $usuario; // Devuelve un array asociativo
             }

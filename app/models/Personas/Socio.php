@@ -8,15 +8,6 @@ class Socio extends Persona {
         parent::__construct($nombre, $apellido, $rol, $email, $contrasenia, $estado);
     }
 
-    // public function AgregarSocio(){
-    //     $nombre = $this->nombre;
-    //     $apellido = $this->apellido;
-    //     $rol = $this->rol;
-    //     $email = $this->email;
-    //     $contrasenia = $this->contrasenia;
-    //     $estado = $this->estado;
-    //     BaseDeDatos::AgregarUsuario($nombre, $apellido, $rol, $email, $contrasenia, $estado); //el valor de estado es "activo"
-    // }
 }
 
 
