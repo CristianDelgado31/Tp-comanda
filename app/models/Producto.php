@@ -119,6 +119,32 @@ class Producto {
 
         return $html;
     }
+
+    public static function ReactivarProducto($id){
+        $listaProductos = self::MostrarLista();
+        $flag = false;
+        $flagFechaBaja = false;
+        foreach ($listaProductos as $producto) {
+            if ($producto->id == $id) {
+                if($producto->fecha_baja == null){
+                    $flagFechaBaja = true; // El producto no fue dado de baja
+                }
+                $flag = true;
+                break;
+            }
+        }
+
+        if($flag == false){
+            throw new Exception("No existe el ID");
+            // return -1; // No existe el id
+        }
+        else if($flagFechaBaja == true){
+            throw new Exception("El producto no fue dado de baja anteriormente");
+            // return false; // El producto no fue dado de baja
+        }
+        BaseDeDatos::ReactivarProducto($id);
+        // return true; // Producto reactivado
+    }
 }
 
 

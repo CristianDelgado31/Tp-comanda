@@ -297,6 +297,14 @@ class Mesa {
     
         return $html;
     }
+
+    public static function ModificarEstado($idMesa, $estado){
+        $mesa = Mesa::VerificarMesaPorId($idMesa);
+        if(!$mesa){
+            throw new Exception('La mesa no existe');
+        }
+        BaseDeDatos::ModificarEstadoMesa($mesa['codigoIdentificacion'], $estado);
+    }
     
     
 }

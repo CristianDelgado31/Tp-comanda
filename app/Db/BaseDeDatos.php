@@ -378,6 +378,14 @@ class BaseDeDatos {
         $stmt->bindParam(':codigoIdentificacion', $codigoIdentificacion);
         $stmt->execute();
     }
+
+    public static function ReactivarProducto($id) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE productos SET fecha_baja = NULL WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
 }
 
 

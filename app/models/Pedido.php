@@ -78,6 +78,10 @@ class Pedido {
     }
 
     public function AgregarPedido(){
+        if(strlen($this->codigoAlfanumerico) != 5){
+            throw new Exception("El codigoAlfanumerico debe tener 5 caracteres");
+        }
+
         //buscar si existe la mesa
         $listaMesas = BaseDeDatos::ListarMesas();
         $flagMesa = false;
@@ -91,9 +95,6 @@ class Pedido {
                 $flagMesa = true;
                 break;
             }
-            // else {
-            //     $flagMesa = true;
-            // }
         }
 
         if(!$flagMesa){ // si es false es porque no encontro la mesa

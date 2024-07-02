@@ -178,6 +178,40 @@ class ProductoController {
 
         return $response;
     }
+
+    public static function ReactivarProducto($request, $response, $args){
+        $body = $request->getParsedBody(); // devuelve un array asociativo
+
+        if(!isset($body['id'])){
+            $payload = json_encode(array("mensaje" => "Faltan datos (id)"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        if(!is_numeric($body['id']) || $body['id'] <= 0){
+            $payload = json_encode(array("mensaje" => "El id debe ser un numero mayor a 0"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        try {
+            $result = Producto::ReactivarProducto($body['id']);
+            $payload = json_encode(array("mensaje" => "Producto reactivado con exito"));
+            $response->withStatus(200);
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        }
+        finally {
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json');
+        }
+    }
     
 }
 

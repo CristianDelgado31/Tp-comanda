@@ -24,6 +24,14 @@ class MesaController {
               ->withStatus(400);
         }
 
+        if(strlen($body['codigoIdentificacion']) != 5){
+            $payload = json_encode(array("mensaje" => "El codigoIdentificacion debe tener 5 caracteres"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
         $mesa = new Mesa($body['codigoIdentificacion'], $body['estado']);
         $mesa->AgregarMesa();
 
@@ -270,6 +278,44 @@ class MesaController {
         $response->getBody()->write($pdfOutput);
 
         return $response;
+    }
+
+    public static function ModificarEstadoMesa($request, $response, $args){
+        $body = $request->getParsedBody(); // devuelve un array asociativo
+        
+        if(!isset($body['id']) || !isset($body['estado'])){
+            $payload = json_encode(array("mensaje" => "Faltan datos"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $id = $body['id'];
+        $estado = $body['estado'];
+
+        if(!is_numeric($id) || $id <= 0){
+            $payload = json_encode(array("mensaje" => "El id debe ser numerico y mayor a 0"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        try {
+            Mesa::ModificarEstado($id, $estado);
+            // si no se lanza una excepcion, la mesa se modifico con exito
+            $payload = json_encode(array("mensaje" => "Estado de la mesa modificado con exito"));
+            $response = $response->withStatus(200);
+    
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        } finally {
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
     }
 }
 

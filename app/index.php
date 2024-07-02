@@ -69,10 +69,10 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 		->add(new RolMiddleware(['socio', 'mozo']));
 
 	$group->post('[/]', \MesaController::class . ':AgregarMesa')
-		->add(new RolMiddleware(['socio']));
+		->add(new RolMiddleware(['socio', 'admin']));
 
 	$group->delete('/{id}', \MesaController::class . ':EliminarMesa')
-		->add(new RolMiddleware(['socio']));
+		->add(new RolMiddleware(['socio', 'admin']));
 
 	$group->put('[/]', \MesaController::class . ':ModificarMesa')
 		->add(new RolMiddleware(['socio', 'admin']));
@@ -104,6 +104,9 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 	$group->post('/facturacionEntreFechas', \MesaController::class . ':MostrarFacturacionEntreFechas')
 		->add(new RolMiddleware(['socio', 'admin']));
 
+	$group->put('/modificarEstadoMesa', \MesaController::class . ':ModificarEstadoMesa')
+		->add(new RolMiddleware(['socio', 'admin']));
+
 })->add(AuthMiddleware::class . ':VerificarToken');
 
 
@@ -122,6 +125,9 @@ $app->group('/productos', function (RouteCollectorProxy $group){
 		->add(new RolMiddleware(['socio', 'admin']));
 
 	$group->post('/importarCSV', \ProductoController::class . ':ImportarProductosDesdeCSV')
+		->add(new RolMiddleware(['admin']));
+	
+	$group->put('/reactivarProducto', \ProductoController::class . ':ReactivarProducto')
 		->add(new RolMiddleware(['admin']));
 
 })->add(AuthMiddleware::class . ':VerificarToken');
