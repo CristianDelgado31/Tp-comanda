@@ -386,6 +386,13 @@ class BaseDeDatos {
         $stmt->bindParam(':id', $id);
         $stmt->execute();
     }
+
+    public static function ModificarEncuestaEnMesa() {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE mesas SET encuesta_realizada = 0");
+        $stmt->execute();
+    }
 }
 
 

@@ -565,6 +565,22 @@ class PedidoController {
 
         return $response;
     }
+
+    public static function EstadisticaEstados($request, $response, $args) {
+        $estadistica = Pedido::EstadisticaEstadosPedidosPor30Dias();
+
+        $response->getBody()->write(json_encode(array("estadistica estados pedidos" => $estadistica)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function EstadisticaVentas($request, $response, $args) {
+        $estadistica = Pedido::EstadisticaVentasPor30Dias();
+
+        $response->getBody()->write(json_encode(array("estadistica ventas" => $estadistica)));
+        return $response
+            ->withHeader('Content-Type', 'application/json');
+    }
 }
 
 

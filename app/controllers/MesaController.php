@@ -302,6 +302,7 @@ class MesaController {
               ->withStatus(400);
         }
 
+
         try {
             Mesa::ModificarEstado($id, $estado);
             // si no se lanza una excepcion, la mesa se modifico con exito

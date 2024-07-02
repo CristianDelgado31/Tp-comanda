@@ -1103,6 +1103,57 @@ class Pedido {
     
         return $pedidosCancelados;
     }  
+
+    public static function EstadisticaEstadosPedidosPor30Dias(){
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $estadisticas = [];
+    
+        // Crear un array asociativo con los estados como claves y valores iniciales en 0
+        $estados = ["pendiente" => 0, "en preparacion" => 0, "listo para servir" => 0, "entregado" => 0, "cancelado" => 0];
+    
+        // Obtener la fecha actual
+        $fechaActual = date("Y-m-d");
+    
+        // Iterar sobre los últimos 30 días
+        for($i = 0; $i < 30; $i++){
+            $fecha = date("Y-m-d", strtotime($fechaActual . " - $i days"));
+            $estadisticas[$fecha] = $estados;
+        }
+    
+        // Contar la cantidad de pedidos en cada estado para cada día
+        foreach($listaPedidos as $pedido){
+            $fecha = date("Y-m-d", strtotime($pedido['tiempo_inicio']));
+            $estado = $pedido['estado'];
+    
+            if(isset($estadisticas[$fecha][$estado])){
+                $estadisticas[$fecha][$estado] += 1;
+            }
+        }
+    
+        return $estadisticas;
+    }
+
+    public static function EstadisticaVentasPor30Dias() {
+        $listaEncuestas = BaseDeDatos::ListarEncuestas();
+        $estadisticas = [];
+    
+        // Obtener la fecha actual
+        $fechaActual = date("Y-m-d");
+    
+        // Iterar sobre los últimos 30 días
+        for($i = 0; $i < 30; $i++){
+            $fecha = date("Y-m-d", strtotime($fechaActual . " - $i days"));
+            $estadisticas[$fecha] = 0;
+        }
+    
+        // Contar la cantidad de ventas para cada día
+        foreach($listaEncuestas as $encuesta){
+            $fecha = date("Y-m-d", strtotime($encuesta['fecha']));
+            $estadisticas[$fecha] += 1;
+        }
+    
+        return $estadisticas;
+    }
 }
 
 ?>

@@ -105,7 +105,7 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 		->add(new RolMiddleware(['socio', 'admin']));
 
 	$group->put('/modificarEstadoMesa', \MesaController::class . ':ModificarEstadoMesa')
-		->add(new RolMiddleware(['socio', 'admin']));
+		->add(new RolMiddleware(['socio', 'admin', 'mozo']));
 
 })->add(AuthMiddleware::class . ':VerificarToken');
 
@@ -189,6 +189,13 @@ $app->group('/pedidos', function (RouteCollectorProxy $group){
 		->add(new RolMiddleware(['socio', 'admin']));
 		
 })->add(AuthMiddleware::class . ':VerificarToken');
+
+// $app->get('/estadistica', \PedidoController::class . ':Estadistica');
+$app->group('/estadisticas', function (RouteCollectorProxy $group){
+	$group->get('/estados', \PedidoController::class . ':EstadisticaEstados');
+	$group->get('/ventas', \PedidoController::class . ':EstadisticaVentas');
+})->add(new RolMiddleware(['socio', 'admin']))
+->add(AuthMiddleware::class . ':VerificarToken');
 
 
 $app->run();

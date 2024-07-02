@@ -303,9 +303,13 @@ class Mesa {
         if(!$mesa){
             throw new Exception('La mesa no existe');
         }
+
+        if($estado == "libre") {
+            BaseDeDatos::ModificarEncuestaEnMesa();
+        }
+
         BaseDeDatos::ModificarEstadoMesa($mesa['codigoIdentificacion'], $estado);
     }
-    
     
 }
 
