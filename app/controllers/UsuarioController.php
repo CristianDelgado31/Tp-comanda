@@ -353,6 +353,16 @@ class UsuarioController {
         return $response;
     }
     
+    public static function EstadisticaLogUsuarios($request, $response, $args) {
+        $lista = Persona::EstadisticaLogUsuariosPor30Dias();
+
+        $payload = json_encode(array("estadistica logs id usuarios en 30 dias" => $lista));
+
+        $response->getBody()->write($payload);
+
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }
 
 

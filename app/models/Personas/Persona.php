@@ -163,6 +163,23 @@ class Persona {
         return $html;
     }
     
+    public static function EstadisticaLogUsuariosPor30Dias() {
+        $fechaActual = date("Y-m-d");
+        $fechaAnterior = date("Y-m-d", strtotime($fechaActual . "-30 days"));
+        $listaLogs = BaseDeDatos::ListarLogsPorFecha($fechaAnterior, $fechaActual);
+        $listaUsuarios = self::MostrarLista();
+        $estadistica = array();
+    
+        foreach ($listaUsuarios as $usuario) {
+            $estadistica[$usuario->id] = 0;
+        }
+    
+        foreach ($listaLogs as $log) {
+            $estadistica[$log['id_usuario']]++;
+        }
+    
+        return $estadistica;
+    }
 }
 
 

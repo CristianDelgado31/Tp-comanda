@@ -190,10 +190,11 @@ $app->group('/pedidos', function (RouteCollectorProxy $group){
 		
 })->add(AuthMiddleware::class . ':VerificarToken');
 
-// $app->get('/estadistica', \PedidoController::class . ':Estadistica');
+
 $app->group('/estadisticas', function (RouteCollectorProxy $group){
-	$group->get('/estados', \PedidoController::class . ':EstadisticaEstados');
+	$group->get('/estadosPedidos', \PedidoController::class . ':EstadisticaEstados');
 	$group->get('/ventas', \PedidoController::class . ':EstadisticaVentas');
+	$group->get('/logUsuarios', \UsuarioController::class . ':EstadisticaLogUsuarios');
 })->add(new RolMiddleware(['socio', 'admin']))
 ->add(AuthMiddleware::class . ':VerificarToken');
 

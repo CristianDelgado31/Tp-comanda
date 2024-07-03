@@ -393,6 +393,14 @@ class BaseDeDatos {
         $stmt = $conn->prepare("UPDATE mesas SET encuesta_realizada = 0");
         $stmt->execute();
     }
+
+    public static function ListarLogsPorFecha() {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT * FROM logs ORDER BY fecha");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 
 
