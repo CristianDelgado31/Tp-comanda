@@ -1,11 +1,11 @@
 <?php
-// require_once 'Db/BaseDeDatos.php';
+require_once 'BaseController.php';
 require_once 'models/Personas/Empleado.php';
 require_once 'models/Personas/Socio.php';
 
 // use TCPDF;
 
-class UsuarioController {
+class UsuarioController extends BaseController {
 
     public static function AgregarUsuario($request, $response, $args) { // $empleado es un objeto JSON
         $usuario = json_decode($request->getBody());
@@ -331,10 +331,17 @@ class UsuarioController {
     
 
     public static function DescargarPDFUsuarios($request, $response, $args) {
+        $request = $request->getQueryParams();
+        $flagLogo = isset($request['logo']) ? true : false;
+
         // Crea una nueva instancia de TCPDF
         $pdf = new TCPDF();
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 12);
+
+        if ($flagLogo) {
+            self::MostrarLogo($pdf);
+        }
 
         // Genera el contenido HTML para el PDF
         $html = Persona::GenerarHtmlDeUsuarios();

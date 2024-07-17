@@ -1,8 +1,10 @@
 <?php
+require_once 'BaseController.php';
 require_once 'models/Pedido.php';
+
 // use TCPDF;
 
-class PedidoController {
+class PedidoController extends BaseController{
 
     public static function MostrarLista($request, $response, $args) {
         $pedidos = Pedido::MostrarLista();
@@ -548,23 +550,60 @@ class PedidoController {
 
 
     public static function DescargarPDFPedidos($request, $response, $args) {
+        $request = $request->getQueryParams();
+        $flagLogo = isset($request['logo']) ? true : false;
+        // // Ruta del logo
+        // $rutaLogo = __DIR__ . '/../models/logo/logo.png';
+    
+        // Crear nuevo documento PDF
         $pdf = new TCPDF();
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 12);
-
-        $lista = Pedido::GenerarHtmlDePedidos();
-
-        $pdf->writeHTML($lista, true, false, true, false, '');
-
+    
+        // Agregar el logo si la bandera es verdadera usando el método MostrarLogo
+        if ($flagLogo) {
+            self::MostrarLogo($pdf);
+        }
+    
+        // Generar el contenido del PDF
+        $listaHtml = Pedido::GenerarHtmlDePedidos($pdf);
+        $pdf->writeHTML($listaHtml, true, false, true, false, '');
+    
+        // Obtener la lista de pedidos
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        $rutaBaseImagenes = __DIR__ . '/../FotosMesasPedidos/';
+        
+        // Inicializar la posición Y para las imágenes
+        $posicionY = $pdf->GetY() + 10;
+    
+        $pdf->Cell(0, 10, "IMAGENES:", 0, 1, 'L');
+    
+        foreach ($listaPedidos as $pedido) {
+            // Agregar el ID del pedido encima de la imagen
+            $pdf->SetY($posicionY);
+            $pdf->Cell(0, 10, "ID: " . htmlspecialchars($pedido['id']), 0, 1, 'L');
+        
+            $rutaImagen = $rutaBaseImagenes . $pedido['nombre_foto'];
+            if (file_exists($rutaImagen)) {
+                $tipoImagen = pathinfo($rutaImagen, PATHINFO_EXTENSION);
+                $pdf->Image($rutaImagen, 15, $pdf->GetY() + 2, 80, 50, $tipoImagen, '', '', true, 150, '', false, false, 1, false, false, false);
+                // Ajustar la posición Y para la siguiente imagen
+                $posicionY = $pdf->GetY() + 60; // Suma de la altura de la imagen más un margen
+            }
+        }
+        
+        // Salida del PDF
         $pdfOutput = $pdf->Output('pedidos.pdf', 'S');
-
+        
         $response = $response->withHeader('Content-Type', 'application/pdf')
                              ->withHeader('Content-Disposition', 'attachment; filename="pedidos.pdf"');
-
+        
         $response->getBody()->write($pdfOutput);
-
+        
         return $response;
     }
+    
+    
 
     public static function EstadisticaEstados($request, $response, $args) {
         $estadistica = Pedido::EstadisticaEstadosPedidosPor30Dias();
@@ -582,6 +621,7 @@ class PedidoController {
             ->withHeader('Content-Type', 'application/json');
     }
 
+    
 }
 
 

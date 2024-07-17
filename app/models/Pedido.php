@@ -1,5 +1,6 @@
 <?php
 require_once 'Db/BaseDeDatos.php';
+require_once 'Archivos.php';
 
 class Pedido {
     public $id;
@@ -1064,32 +1065,63 @@ class Pedido {
     
     public static function GenerarHtmlDePedidos() {
         $listaPedidos = BaseDeDatos::ListarPedidos();
-        
-        // Utiliza heredoc para una mejor legibilidad y manejo de HTML
+    
+        // Utilizando heredoc para una mejor legibilidad
         $html = <<<HTML
+        <div style="margin-top: 20px;"> <!-- Agrega un margen superior de 20px -->
         <h1>Pedidos</h1>
-        <style>
-        div {
-            border: 1px solid black;
-            margin: 10px;
-            padding: 10px;
-        }
+        <style>            
+            table {
+                padding: 6px;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
         </style>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Código alfanumérico</th>
+                <th>Nombre del cliente</th>
+                <th>Código de la mesa</th>
+                <th>Estado</th>
+                <th>Tiempo estimado</th>
+                <th>Precio final</th>
+                <th>Nombre de la foto</th>
+            </tr>
         HTML;
-        
-        foreach($listaPedidos as $pedido){
-            $html .= "<div>";
-            $html .= "<p>Código alfanumérico: " . htmlspecialchars($pedido['codigoAlfanumerico']) . "</p>";
-            $html .= "<p>Nombre del cliente: " . htmlspecialchars($pedido['nombreCliente']) . "</p>";
-            $html .= "<p>Código de la mesa: " . htmlspecialchars($pedido['codigoMesa']) . "</p>";
-            $html .= "<p>Estado: " . htmlspecialchars($pedido['estado']) . "</p>";
-            $html .= "<p>Tiempo estimado: " . htmlspecialchars($pedido['tiempoEstimado']) . "</p>";
-            $html .= "<p>Precio final: " . htmlspecialchars($pedido['precioFinal']) . "</p>";
-            $html .= "</div>";
+    
+        foreach ($listaPedidos as $pedido) {
+            $html .= '<tr>';
+            $html .= '<td>' . htmlspecialchars($pedido['id']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['codigoAlfanumerico']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['nombreCliente']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['codigoMesa']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['estado']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['tiempoEstimado']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['precioFinal']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($pedido['nombre_foto']) . '</td>';
+            $html .= '</tr>';
         }
     
+        $html .= '</table>';
+        $html .= '</div>'; // Cierre del contenedor
+
         return $html;
     }
+    
+    
+    
+    
+    
+    
     
     public static function ListaPedidosCancelados(){
         $listaPedidos = BaseDeDatos::ListarPedidos();
@@ -1154,6 +1186,7 @@ class Pedido {
     
         return $estadisticas;
     }
+
 }
 
 ?>

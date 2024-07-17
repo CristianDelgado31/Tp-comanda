@@ -401,6 +401,15 @@ class BaseDeDatos {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function AgregarFoto($id, $nombre_foto) {
+        $db = self::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("UPDATE pedidos SET nombre_foto = :nombre_foto WHERE id = :id");
+        $stmt->bindParam(':nombre_foto', $nombre_foto);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
 }
 
 

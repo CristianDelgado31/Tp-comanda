@@ -1,8 +1,9 @@
 <?php
+require_once 'BaseController.php';
 require_once 'models/Producto.php';
 // use TCPDF;
 
-class ProductoController {
+class ProductoController extends BaseController{
 
     public static function AgregarProducto($request, $response, $args){
         $body = $request->getParsedBody(); // devuelve un array asociativo
@@ -162,9 +163,16 @@ class ProductoController {
     }
 
     public static function DescargarPDFProductos($request, $response, $args){
+        $request = $request->getQueryParams();
+        $flagLogo = isset($request['logo']) ? true : false;
+
         $pdf = new TCPDF();
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 12);
+
+        if ($flagLogo) {
+            self::MostrarLogo($pdf);
+        }
 
         $lista = Producto::GenerarHtmlDeProductos();
         $pdf->writeHTML($lista, true, false, true, false, '');

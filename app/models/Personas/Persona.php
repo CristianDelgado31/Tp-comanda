@@ -11,6 +11,7 @@ class Persona {
     public $email;
     public $contrasenia;
     public $estado;
+    // public $cantidad_operaciones;
     
     public function __construct($nombre, $apellido, $rol, $email, $contrasenia, $estado = "activo") {
         $this->nombre = $nombre;
@@ -28,14 +29,19 @@ class Persona {
         //tengo que agregar una condicion para que no muestre los usuarios eliminados
         foreach ($listaUsuarios as $usuario) {
             if ($usuario['rol'] != "socio") {
-                $empleado = new Empleado($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", $usuario['estado']);
+                // $empleado = new Empleado($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", $usuario['estado']); // original
+                $empleado = new Empleado($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", 
+                                         $usuario['estado'], $usuario['cant_operaciones']); // testeando
+
                 $empleado->id = $usuario['id'];
                 $empleado->fechaBaja = $usuario['fecha_baja'];
+                // $empleado->cantidad_operaciones = $usuario['cant_operaciones'];
                 array_push($listaRetorno, $empleado);
             } else {
                 $socio = new Socio($usuario['nombre'], $usuario['apellido'], $usuario['rol'], $usuario['email'], "", $usuario['estado']);
                 $socio->id = $usuario['id'];
                 $socio->fechaBaja = $usuario['fecha_baja'];
+                // $socio->cantidad_operaciones = $usuario['cantidad_operaciones']; // no deberia tener cantidad de operaciones -> test
                 array_push($listaRetorno, $socio);
             }
         }
@@ -144,22 +150,58 @@ class Persona {
 
 
     public static function GenerarHtmlDeUsuarios() {
-        $usuarios = self::MostrarLista();
-        $html = '<h1>Lista de Usuarios</h1>';
-        $html .= '<table border="1" width="100%">';
-        $html .= '<tr><th>Nombre</th><th>Apellido</th><th>Rol</th><th>Email</th><th>Estado</th></tr>';
+        $usuarios = BaseDeDatos::ListarUsuarios();
+        $html = <<<HTML
+        <div style="margin-top: 20px;"> <!-- Agrega un margen superior de 20px -->
+        <h1>Lista de usuarios</h1>
+        <style>
+            table {
+                padding: 5px;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 5px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Rol</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Fecha de baja</th>
+                <th>Cantidad de operaciones</th>
+            </tr>
+        HTML;
         
         foreach ($usuarios as $usuario) {
             $html .= '<tr>';
-            $html .= '<td>' . $usuario->nombre . '</td>';
-            $html .= '<td>' . $usuario->apellido . '</td>';
-            $html .= '<td>' . $usuario->rol . '</td>';
-            $html .= '<td>' . $usuario->email . '</td>';
-            $html .= '<td>' . $usuario->estado . '</td>';
+            $html .= '<td>' . $usuario['id'] . '</td>';
+            $html .= '<td>' . $usuario['nombre'] . '</td>';
+            $html .= '<td>' . $usuario['apellido'] . '</td>';
+            $html .= '<td>' . $usuario['rol'] . '</td>';
+            $html .= '<td>' . $usuario['email'] . '</td>';
+            $html .= '<td>' . $usuario['estado'] . '</td>';
+            $html .= '<td>' . $usuario['fecha_baja'] . '</td>';
+
+            if($usuario['rol'] != "socio" && $usuario['rol'] != "admin") {
+                $html .= '<td>' . $usuario['cant_operaciones'] . '</td>';
+            } else {
+                $html .= '<td>' . null . '</td>';
+            }
             $html .= '</tr>';
         }
         
         $html .= '</table>';
+        $html .= '</div>';
         return $html;
     }
     

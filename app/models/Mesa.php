@@ -1,11 +1,13 @@
 <?php
 require_once 'Db/BaseDeDatos.php';
+require_once 'Archivos.php';
 
 class Mesa {
     public $id;
     public $codigoIdentificacion;
     public $estado; // ocupada o libre
     public $fechaBaja;
+    public $cantidad_usos;
 
     public function __construct($codigoIdentificacion, $estado) {
         $this->codigoIdentificacion = $codigoIdentificacion;
@@ -21,6 +23,7 @@ class Mesa {
             $mesaAux = new Mesa($mesa['codigoIdentificacion'], $mesa['estado']);
             $mesaAux->id = $mesa['id'];
             $mesaAux->fechaBaja = $mesa['fecha_baja'];
+            $mesaAux->cantidad_usos = $mesa['cantidad_usos'];
             array_push($listaRetorno, $mesaAux); // array_push — Inserta uno o más elementos al final de un array
         }
 
@@ -261,27 +264,31 @@ class Mesa {
     
         // Utilizando heredoc para una mejor legibilidad
         $html = <<<HTML
-        <style>
-            table {
-                border-collapse: collapse;
-                width: 100%;
-            }
-            th, td {
-                border: 1px solid black;
-                padding: 8px;
-                text-align: left;
-            }
-            th {
-                background-color: #f2f2f2;
-            }
-        </style>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Código de Identificación</th>
-                <th>Estado</th>
-                <th>Fecha de Baja</th>
-            </tr>
+        <div style="margin-top: 20px;"> <!-- Agrega un margen superior de 20px -->
+            <h1>Mesas</h1>
+            <style>
+                table {
+                    padding: 5px;
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+                th, td {
+                    border: 1px solid black;
+                    padding: 5px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+            </style>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Código de Identificación</th>
+                    <th>Estado</th>
+                    <th>Fecha de Baja</th>
+                    <th>Cantidad de Usos</th>
+                </tr>
         HTML;
     
         foreach ($listaMesas as $mesa) {
@@ -290,13 +297,16 @@ class Mesa {
             $html .= '<td>' . htmlspecialchars($mesa->codigoIdentificacion) . '</td>';
             $html .= '<td>' . htmlspecialchars($mesa->estado) . '</td>';
             $html .= '<td>' . htmlspecialchars($mesa->fechaBaja) . '</td>';
+            $html .= '<td>' . htmlspecialchars($mesa->cantidad_usos) . '</td>';
             $html .= '</tr>';
         }
     
         $html .= '</table>';
+        $html .= '</div>'; // Cierre del contenedor
     
         return $html;
     }
+    
 
     public static function ModificarEstado($idMesa, $estado){
         $mesa = Mesa::VerificarMesaPorId($idMesa);
@@ -311,6 +321,43 @@ class Mesa {
         BaseDeDatos::ModificarEstadoMesa($mesa['codigoIdentificacion'], $estado);
     }
     
+    public static function GuardarFoto($codigoMesa, $codigoPedido, $foto) {
+        try {
+            $listaPedidos = BaseDeDatos::ListarPedidos();
+            $pedidoEncontrado = null;
+
+            // Buscar el pedido correspondiente a la foto
+            foreach ($listaPedidos as $pedido) {
+                if ($pedido['codigoAlfanumerico'] == $codigoPedido && $pedido['codigoMesa'] == $codigoMesa) {
+
+                    if($pedido['nombre_foto'] != null){
+                        throw new Exception('Ya existe una foto para este pedido');
+                    }
+
+                    $pedidoEncontrado = $pedido;
+                    break;
+                }
+            }
+
+            if (!$pedidoEncontrado) {
+                throw new Exception('No se encontró el pedido correspondiente a la foto');
+            }
+
+            $nombre = $codigoMesa . '_' . $codigoPedido;
+            $tipoImagen = Archivos::AveriguarExtension($foto['name']);
+            
+            Archivos::SubirImagen($foto, $nombre);
+
+            BaseDeDatos::AgregarFoto($pedidoEncontrado['id'], $nombre.'.'.$tipoImagen);
+
+            return true;
+
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+
+    }
+
 }
 
 

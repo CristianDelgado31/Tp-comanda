@@ -71,6 +71,9 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 	$group->post('[/]', \MesaController::class . ':AgregarMesa')
 		->add(new RolMiddleware(['socio', 'admin']));
 
+	$group->post('/agregarFoto', \MesaController::class . ':GuardarFotoMesaPedido')
+		->add(new RolMiddleware(['mozo']));
+
 	$group->delete('/{id}', \MesaController::class . ':EliminarMesa')
 		->add(new RolMiddleware(['socio', 'admin']));
 

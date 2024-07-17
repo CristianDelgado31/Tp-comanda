@@ -102,21 +102,48 @@ class Producto {
 
     public static function GenerarHtmlDeProductos(){
         $listaProductos = self::MostrarLista();
-        $html = '<h1>Lista de Productos</h1>';
-        $html .= '<table border="1" width="100%">';
-        $html .= '<tr><th>Nombre</th><th>Tipo</th><th>Precio</th></tr>';
+        
+        $html = <<<HTML
+        <div style="margin-top: 20px;"> <!-- Agrega un margen superior de 20px -->
+        <h1>Lista de productos</h1>
+        <style>
+            table {
+                padding: 5px;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 5px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Precio</th>
+                <th>Fecha de baja</th>
+            </tr>
+        HTML;
+
+
         foreach ($listaProductos as $producto) {
             $html .= '<tr>';
-            // $html .= '<td>' . $producto->id . '</td>';
+            $html .= '<td>' . $producto->id . '</td>';
             $html .= '<td>' . $producto->nombre . '</td>';
             $html .= '<td>' . $producto->tipo . '</td>';
             $html .= '<td>' . $producto->precio . '</td>';
-            // $html .= '<td>' . $producto->fecha_baja . '</td>';
+            $html .= '<td>' . $producto->fecha_baja . '</td>';
             $html .= '</tr>';
         }
 
         $html .= '</table>';
-
+        $html .= '</div>';
         return $html;
     }
 

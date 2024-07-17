@@ -1,8 +1,9 @@
 <?php
+require_once 'BaseController.php';
 require_once 'models/Mesa.php';
 // use TCPDF;
 
-class MesaController {
+class MesaController extends BaseController {
 
     public static function AgregarMesa($request, $response, $args){
         $body = $request->getParsedBody(); // devuelve un array asociativo
@@ -264,9 +265,16 @@ class MesaController {
     }
 
     public static function DescargarPDFMesas($request, $response, $args){
+        $request = $request->getQueryParams();
+        $flagLogo = isset($request['logo']) ? true : false;
+
         $pdf = new TCPDF();
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 12);
+
+        if ($flagLogo) {
+            self::MostrarLogo($pdf);
+        }
 
         $html = Mesa::GenerarHtmlDeMesas();
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -307,6 +315,45 @@ class MesaController {
             Mesa::ModificarEstado($id, $estado);
             // si no se lanza una excepcion, la mesa se modifico con exito
             $payload = json_encode(array("mensaje" => "Estado de la mesa modificado con exito"));
+            $response = $response->withStatus(200);
+    
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            $response = $response->withStatus(400);
+        } finally {
+            $response->getBody()->write($payload);
+            return $response
+                ->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public static function GuardarFotoMesaPedido($request, $response, $args){
+        $body = $request->getParsedBody(); // devuelve un array asociativo
+        
+        if(!isset($body['codigoMesa']) || !isset($body['codigoPedido']) || !isset($_FILES['foto'])){
+            $payload = json_encode(array("mensaje" => "Faltan datos"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        $codigoMesa = $body['codigoMesa'];
+        $codigoPedido = $body['codigoPedido'];
+        $foto = $_FILES['foto'];
+
+        if($foto['type'] != "image/jpeg" && $foto['type'] != "image/png"){
+            $payload = json_encode(array("mensaje" => "El archivo debe ser de tipo jpg o png"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(400);
+        }
+
+        try {
+            Mesa::GuardarFoto($codigoMesa, $codigoPedido, $foto);
+            // si no se lanza una excepcion, la foto se guardo con exito
+            $payload = json_encode(array("mensaje" => "Foto guardada con exito"));
             $response = $response->withStatus(200);
     
         } catch (Exception $e) {
