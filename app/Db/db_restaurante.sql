@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 29-07-2024 a las 17:20:38
+-- Tiempo de generación: 29-07-2024 a las 19:16:22
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -50,9 +50,9 @@ INSERT INTO `empleados` (`id`, `nombre`, `apellido`, `rol`, `estado`, `fecha_baj
 (13, 'roberto', 'carlos', 'bartender', 'activo', NULL, 'roberto@gmail.com', '$2y$10$7CqBFpBRSThKKOciVPSx/ejJyrHUdc4scNAIoAFBoMdnJzEFEUdji', 7),
 (14, 'marta', 'lopez', 'socio', 'activo', NULL, 'marta@gmail.com', '$2y$10$I42FkZDT5qh7xvao9yyCV.n/LYO4CkwcJVq7xZ05osQFlGRmU8yym', 0),
 (15, 'romeo', 'santos', 'admin', 'activo', NULL, 'romeo@gmail.com', '$2y$10$puLDDHiONJXldBQtMb6B9.k4JojF45P7S0xYZRFl5x020y4LYnbmG', 0),
-(16, 'roman', 'riquelme', 'cocinero', 'activo', NULL, 'roman@gmail.com', '$2y$10$8w6xPmenKALcZtnD0QsNpegjNJNunhGjsLm8mIsezzn07GjbVFCWu', 0),
+(16, 'roman', 'riquelme', 'cocinero', 'activo', NULL, 'roman@gmail.com', '$2y$10$8w6xPmenKALcZtnD0QsNpegjNJNunhGjsLm8mIsezzn07GjbVFCWu', 2),
 (17, 'dario', 'gomez', 'bartender', 'activo', NULL, 'dario@gmail.com', '$2y$10$Lch1WXzPGMEIfzskn3c9D.taDNv/aNj2UlmNU0lZY1ynZN/9B0xxW', 0),
-(18, 'pedro', 'sanchez', 'mozo', 'activo', NULL, 'pedrito@gmail.com', '$2y$10$fC7kboIVjuZQh/08q.JzGuQuJnPF.78spjXwDzmupOGPJxMKxpD26', 14);
+(18, 'pedro', 'sanchez', 'mozo', 'activo', NULL, 'pedrito@gmail.com', '$2y$10$fC7kboIVjuZQh/08q.JzGuQuJnPF.78spjXwDzmupOGPJxMKxpD26', 15);
 
 -- --------------------------------------------------------
 
@@ -80,7 +80,8 @@ CREATE TABLE `encuesta_cliente` (
 
 INSERT INTO `encuesta_cliente` (`id`, `codigo_mesa`, `codigo_pedido`, `puntuacion_mesa`, `puntuacion_restaurante`, `puntuacion_mozo`, `puntuacion_cocinero`, `puntuacion_bartender`, `puntuacion_cervecero`, `descripcion`, `fecha`) VALUES
 (9, 'abc12', 'gfd12', 8, 8, 7, NULL, NULL, 7, 'buen lugar para comer', '2024-07-02'),
-(10, 'bnm12', 'abc12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-16');
+(10, 'bnm12', 'abc12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-16'),
+(11, 'ert13', 'you12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-29');
 
 -- --------------------------------------------------------
 
@@ -236,7 +237,17 @@ INSERT INTO `logs` (`id`, `id_usuario`, `fecha`, `hora`) VALUES
 (134, 8, '2024-07-17', '03:13:24.000000'),
 (135, 8, '2024-07-17', '03:20:06.000000'),
 (136, 8, '2024-07-17', '03:22:24.000000'),
-(137, 8, '2024-07-17', '03:32:27.000000');
+(137, 8, '2024-07-17', '03:32:27.000000'),
+(138, 8, '2024-07-29', '15:22:10.000000'),
+(139, 16, '2024-07-29', '15:36:14.000000'),
+(140, 16, '2024-07-29', '15:47:37.000000'),
+(141, 18, '2024-07-29', '15:48:00.000000'),
+(142, 8, '2024-07-29', '15:49:52.000000'),
+(143, 18, '2024-07-29', '15:52:28.000000'),
+(144, 18, '2024-07-29', '15:54:18.000000'),
+(145, 8, '2024-07-29', '15:54:21.000000'),
+(146, 8, '2024-07-29', '16:10:14.000000'),
+(147, 8, '2024-07-29', '16:49:51.000000');
 
 -- --------------------------------------------------------
 
@@ -262,7 +273,7 @@ INSERT INTO `mesas` (`id`, `codigoIdentificacion`, `estado`, `fecha_baja`, `encu
 (2, 'fgh12', 'con cliente esperando pedido', NULL, 0, 1),
 (3, 'qwe12', 'libre', NULL, 0, 1),
 (4, 'bnm12', 'libre', NULL, 0, 2),
-(8, 'ert13', 'con cliente esperando pedido', NULL, 0, 1);
+(8, 'ert13', 'libre', NULL, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -281,19 +292,20 @@ CREATE TABLE `pedidos` (
   `fecha_baja` date DEFAULT NULL,
   `tiempo_inicio` time DEFAULT NULL,
   `tiempo_final` time DEFAULT NULL,
-  `nombre_foto` varchar(48) DEFAULT NULL
+  `nombre_foto` varchar(48) DEFAULT NULL,
+  `fecha` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `pedidos`
 --
 
-INSERT INTO `pedidos` (`id`, `codigoAlfanumerico`, `nombreCliente`, `codigoMesa`, `estado`, `precioFinal`, `tiempoEstimado`, `fecha_baja`, `tiempo_inicio`, `tiempo_final`, `nombre_foto`) VALUES
-(15, 'gfd12', 'martin', 'abc12', 'entregado', 100, 5, NULL, '23:38:05', '23:45:20', 'abc12_gfd12.png'),
-(16, 'abc12', 'joaquin', 'bnm12', 'entregado', 1000, 5, NULL, '18:06:42', '18:09:11', 'bnm12_abc12.png'),
-(17, 'you12', 'marta', 'ert13', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'ert13_you12.png'),
-(18, 'ami31', 'cristian', 'fgh12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'fgh12_ami31.png'),
-(19, 'zxc12', 'mario', 'abc12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'abc12_zxc12.png');
+INSERT INTO `pedidos` (`id`, `codigoAlfanumerico`, `nombreCliente`, `codigoMesa`, `estado`, `precioFinal`, `tiempoEstimado`, `fecha_baja`, `tiempo_inicio`, `tiempo_final`, `nombre_foto`, `fecha`) VALUES
+(15, 'gfd12', 'martin', 'abc12', 'entregado', 100, 5, NULL, '23:38:05', '23:45:20', 'abc12_gfd12.png', '2024-07-02'),
+(16, 'abc12', 'joaquin', 'bnm12', 'entregado', 1000, 5, NULL, '18:06:42', '18:09:11', 'bnm12_abc12.png', '2024-07-16'),
+(17, 'you12', 'marta', 'ert13', 'entregado', 1000, 2, NULL, '15:37:54', '15:47:43', 'ert13_you12.png', '2024-07-29'),
+(18, 'ami31', 'cristian', 'fgh12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'fgh12_ami31.png', '2024-07-29'),
+(19, 'zxc12', 'mario', 'abc12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'abc12_zxc12.png', '2024-07-29');
 
 -- --------------------------------------------------------
 
@@ -318,7 +330,7 @@ CREATE TABLE `pedido_producto` (
 INSERT INTO `pedido_producto` (`id`, `codigo_pedido`, `id_producto`, `estado`, `id_usuario`, `tiempo_producto`, `fecha_baja`) VALUES
 (20, 'gfd12', 2, 'listo para servir', 9, 5, NULL),
 (21, 'abc12', 6, 'listo para servir', 12, 5, NULL),
-(22, 'you12', 6, 'pendiente', NULL, NULL, NULL),
+(22, 'you12', 6, 'listo para servir', 16, 2, NULL),
 (23, 'ami31', 6, 'pendiente', NULL, NULL, NULL),
 (24, 'zxc12', 6, 'pendiente', NULL, NULL, NULL);
 
@@ -410,13 +422,13 @@ ALTER TABLE `empleados`
 -- AUTO_INCREMENT de la tabla `encuesta_cliente`
 --
 ALTER TABLE `encuesta_cliente`
-  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=138;
+  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
 
 --
 -- AUTO_INCREMENT de la tabla `mesas`

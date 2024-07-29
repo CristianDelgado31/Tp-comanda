@@ -1154,7 +1154,7 @@ class Pedido {
     
         // Contar la cantidad de pedidos en cada estado para cada día
         foreach($listaPedidos as $pedido){
-            $fecha = date("Y-m-d", strtotime($pedido['tiempo_inicio']));
+            $fecha = date("Y-m-d", strtotime($pedido['fecha']));
             $estado = $pedido['estado'];
     
             if(isset($estadisticas[$fecha][$estado])){
