@@ -219,7 +219,7 @@ class Mesa {
             $puntajePromedio = $sumaPuntajes / $contador;
     
             // Filtramos los comentarios que tienen un puntaje promedio menor a 4
-            if ($puntajePromedio < 4) {
+            if ($puntajePromedio < 7) {
                 $peoresComentarios[] = $encuesta; // Agregar la encuesta completa a los peores comentarios
             }
         }

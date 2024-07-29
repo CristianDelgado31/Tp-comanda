@@ -69,13 +69,22 @@ class Pedido {
                 }
             }
         }
+        $listaResultLimpia = array();
+        $listaPedidos = BaseDeDatos::ListarPedidos();
+        foreach ($listaPedidos as $pedido) {
+            foreach ($listaResult as $pedidoProducto) {
+                if ($pedidoProducto['codigo_pedido'] == $pedido['codigoAlfanumerico'] && $pedido['estado'] != "cancelado" && $pedido['estado'] != "eliminado") {
+                    $listaResultLimpia[] = $pedidoProducto;
+                }
+            }
+        }
 
-        if(count($listaResult) == 0){
+        if(count($listaResultLimpia) == 0){
             throw new Exception("No hay pedidos pendientes");
             // return 1; // No hay pedidos pendientes
         }
 
-        return $listaResult;
+        return $listaResultLimpia;
     }
 
     public function AgregarPedido(){
@@ -180,6 +189,7 @@ class Pedido {
                     throw new Exception("El empleado esta ocupado");
                     // return 4; // El empleado esta ocupado
                 }
+
                 $id_usuario = $empleado['id'];
                 break;
             }
@@ -213,7 +223,7 @@ class Pedido {
             // return -1; // El empleado/usuario no existe
         }
 
-        foreach ($listaPedidosProductos as $pedidoProducto) { // pedidoProducto es un array asociativo
+        foreach ($listaPedidosProductos as $pedidoProducto) { // pedidoProducto es un array asociativo 
             if (intval($pedidoProducto['id']) == $id_pedido_producto) {
                 if($pedidoProducto['estado'] != "pendiente"){
                     throw new Exception("El pedido_producto ya fue tomado por un usuario");
@@ -225,11 +235,22 @@ class Pedido {
                 
                 foreach ($listaPedidos as $pedido) {
                     if ($pedido['codigoAlfanumerico'] == $pedidoProducto['codigo_pedido']) {
+                        if($pedido['estado'] == "cancelado"){
+                            throw new Exception("El pedido fue cancelado, no se puede tomar el producto");
+                        } else if($pedido['estado'] == "eliminado"){
+                            throw new Exception("El pedido fue eliminado, no se puede tomar el producto");
+                        } 
+                        // else if($pedido['estado'] == "entregado"){
+                        //     throw new Exception("El pedido fue entregado, no se puede tomar el producto");
+                        // } else if($pedido['estado'] == "listo para servir"){
+                        //     throw new Exception("El pedido esta listo para servir, no se puede tomar el producto");
+
                         $pedido['estado'] = "en preparacion";
                         if($pedido['tiempoEstimado'] == null || $pedido['tiempoEstimado'] < $tiempoPreparacion){
                             $pedido['tiempoEstimado'] = $tiempoPreparacion;
                         }
                         BaseDeDatos::ActualizarPedido($pedido);
+                        date_default_timezone_set('America/Argentina/Buenos_Aires');
                         $tiempo = date('H:i:s');
                         BaseDeDatos::ModificarHoraEnPedido($pedido['id'], $tiempo, "inicio");
                         break;
@@ -252,7 +273,7 @@ class Pedido {
     
         // Definir los permisos por rol
         $arrUsuarios = array(
-            "cocinero" => array("comida", "postre"), // Añadir "postre" si corresponde
+            "cocinero" => array("comida", "postre"),
             "bartender" => array("trago", "vino"),
             "cervecero" => array("cerveza")
         );
@@ -265,11 +286,6 @@ class Pedido {
                 break;
             }
         }
-
-        // // Verificar si el rol no está en el arreglo
-        // if (!array_key_exists($rol, $arrUsuarios)) {
-        //     return -1; // El rol ingresado no existe
-        // }
 
         // Verificar si el producto pertenece al rol del usuario
         foreach ($listaPedidosProductos as $pedidoProducto) {
@@ -400,6 +416,8 @@ class Pedido {
         // BaseDeDatos::EliminarPedido($id, $fechaBaja);
         BaseDeDatos::ModificarEstadoMesa($codigo_mesa, "libre");
         BaseDeDatos::ModificarEstadoPedido($id, "cancelado");
+        $fecha_baja = date("Y-m-d");
+        BaseDeDatos::EliminarPedido($id, $fecha_baja);
     }
 
     public static function EliminarPedido($id) {

@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response as ResponseClass;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
-use TCPDF; // Para generar PDFs
+// use TCPDF; // Para generar PDFs
 
 require_once '../vendor/autoload.php';
 require_once 'middleware/AuthMiddleware.php';

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 29-07-2024 a las 19:16:22
+-- Tiempo de generación: 30-07-2024 a las 01:38:14
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -50,9 +50,9 @@ INSERT INTO `empleados` (`id`, `nombre`, `apellido`, `rol`, `estado`, `fecha_baj
 (13, 'roberto', 'carlos', 'bartender', 'activo', NULL, 'roberto@gmail.com', '$2y$10$7CqBFpBRSThKKOciVPSx/ejJyrHUdc4scNAIoAFBoMdnJzEFEUdji', 7),
 (14, 'marta', 'lopez', 'socio', 'activo', NULL, 'marta@gmail.com', '$2y$10$I42FkZDT5qh7xvao9yyCV.n/LYO4CkwcJVq7xZ05osQFlGRmU8yym', 0),
 (15, 'romeo', 'santos', 'admin', 'activo', NULL, 'romeo@gmail.com', '$2y$10$puLDDHiONJXldBQtMb6B9.k4JojF45P7S0xYZRFl5x020y4LYnbmG', 0),
-(16, 'roman', 'riquelme', 'cocinero', 'activo', NULL, 'roman@gmail.com', '$2y$10$8w6xPmenKALcZtnD0QsNpegjNJNunhGjsLm8mIsezzn07GjbVFCWu', 2),
+(16, 'roman', 'riquelme', 'cocinero', 'activo', NULL, 'roman@gmail.com', '$2y$10$8w6xPmenKALcZtnD0QsNpegjNJNunhGjsLm8mIsezzn07GjbVFCWu', 5),
 (17, 'dario', 'gomez', 'bartender', 'activo', NULL, 'dario@gmail.com', '$2y$10$Lch1WXzPGMEIfzskn3c9D.taDNv/aNj2UlmNU0lZY1ynZN/9B0xxW', 0),
-(18, 'pedro', 'sanchez', 'mozo', 'activo', NULL, 'pedrito@gmail.com', '$2y$10$fC7kboIVjuZQh/08q.JzGuQuJnPF.78spjXwDzmupOGPJxMKxpD26', 15);
+(18, 'pedro', 'sanchez', 'mozo', 'activo', NULL, 'pedrito@gmail.com', '$2y$10$fC7kboIVjuZQh/08q.JzGuQuJnPF.78spjXwDzmupOGPJxMKxpD26', 16);
 
 -- --------------------------------------------------------
 
@@ -81,7 +81,8 @@ CREATE TABLE `encuesta_cliente` (
 INSERT INTO `encuesta_cliente` (`id`, `codigo_mesa`, `codigo_pedido`, `puntuacion_mesa`, `puntuacion_restaurante`, `puntuacion_mozo`, `puntuacion_cocinero`, `puntuacion_bartender`, `puntuacion_cervecero`, `descripcion`, `fecha`) VALUES
 (9, 'abc12', 'gfd12', 8, 8, 7, NULL, NULL, 7, 'buen lugar para comer', '2024-07-02'),
 (10, 'bnm12', 'abc12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-16'),
-(11, 'ert13', 'you12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-29');
+(11, 'ert13', 'you12', 8, 8, 7, 7, NULL, NULL, 'buen lugar para comer', '2024-07-29'),
+(12, 'abc12', 'zxc12', 4, 3, 7, 3, NULL, NULL, 'Demora en el pedido, mal lugar', '2024-07-29');
 
 -- --------------------------------------------------------
 
@@ -247,7 +248,29 @@ INSERT INTO `logs` (`id`, `id_usuario`, `fecha`, `hora`) VALUES
 (144, 18, '2024-07-29', '15:54:18.000000'),
 (145, 8, '2024-07-29', '15:54:21.000000'),
 (146, 8, '2024-07-29', '16:10:14.000000'),
-(147, 8, '2024-07-29', '16:49:51.000000');
+(147, 8, '2024-07-29', '16:49:51.000000'),
+(148, 8, '2024-07-29', '19:50:14.000000'),
+(149, 8, '2024-07-29', '19:50:44.000000'),
+(150, 8, '2024-07-29', '20:35:58.000000'),
+(151, 8, '2024-07-29', '20:40:40.000000'),
+(152, 8, '2024-07-29', '20:43:22.000000'),
+(153, 8, '2024-07-29', '20:46:59.000000'),
+(154, 8, '2024-07-29', '21:03:19.000000'),
+(155, 8, '2024-07-29', '21:08:53.000000'),
+(156, 8, '2024-07-29', '21:18:22.000000'),
+(157, 18, '2024-07-29', '21:19:44.000000'),
+(158, 18, '2024-07-29', '21:25:03.000000'),
+(159, 8, '2024-07-29', '21:26:32.000000'),
+(160, 16, '2024-07-29', '21:50:02.000000'),
+(161, 16, '2024-07-29', '22:02:52.000000'),
+(162, 16, '2024-07-29', '22:09:39.000000'),
+(163, 16, '2024-07-29', '22:12:09.000000'),
+(164, 16, '2024-07-29', '22:15:58.000000'),
+(165, 18, '2024-07-29', '22:17:33.000000'),
+(166, 8, '2024-07-29', '22:19:56.000000'),
+(167, 8, '2024-07-29', '22:25:03.000000'),
+(168, 8, '2024-07-29', '22:33:13.000000'),
+(169, 8, '2024-07-29', '23:24:10.000000');
 
 -- --------------------------------------------------------
 
@@ -269,8 +292,8 @@ CREATE TABLE `mesas` (
 --
 
 INSERT INTO `mesas` (`id`, `codigoIdentificacion`, `estado`, `fecha_baja`, `encuesta_realizada`, `cantidad_usos`) VALUES
-(1, 'abc12', 'con cliente esperando pedido', NULL, 0, 2),
-(2, 'fgh12', 'con cliente esperando pedido', NULL, 0, 1),
+(1, 'abc12', 'cerrada', NULL, 1, 2),
+(2, 'fgh12', 'libre', NULL, 0, 1),
 (3, 'qwe12', 'libre', NULL, 0, 1),
 (4, 'bnm12', 'libre', NULL, 0, 2),
 (8, 'ert13', 'libre', NULL, 0, 1);
@@ -304,8 +327,8 @@ INSERT INTO `pedidos` (`id`, `codigoAlfanumerico`, `nombreCliente`, `codigoMesa`
 (15, 'gfd12', 'martin', 'abc12', 'entregado', 100, 5, NULL, '23:38:05', '23:45:20', 'abc12_gfd12.png', '2024-07-02'),
 (16, 'abc12', 'joaquin', 'bnm12', 'entregado', 1000, 5, NULL, '18:06:42', '18:09:11', 'bnm12_abc12.png', '2024-07-16'),
 (17, 'you12', 'marta', 'ert13', 'entregado', 1000, 2, NULL, '15:37:54', '15:47:43', 'ert13_you12.png', '2024-07-29'),
-(18, 'ami31', 'cristian', 'fgh12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'fgh12_ami31.png', '2024-07-29'),
-(19, 'zxc12', 'mario', 'abc12', 'pendiente', 1000, NULL, NULL, NULL, NULL, 'abc12_zxc12.png', '2024-07-29');
+(18, 'ami31', 'cristian', 'fgh12', 'cancelado', 1000, NULL, '2024-07-29', NULL, NULL, 'fgh12_ami31.png', '2024-07-29'),
+(19, 'zxc12', 'mario', 'abc12', 'entregado', 1000, 2, NULL, '22:12:23', '22:16:12', 'abc12_zxc12.png', '2024-07-29');
 
 -- --------------------------------------------------------
 
@@ -332,7 +355,7 @@ INSERT INTO `pedido_producto` (`id`, `codigo_pedido`, `id_producto`, `estado`, `
 (21, 'abc12', 6, 'listo para servir', 12, 5, NULL),
 (22, 'you12', 6, 'listo para servir', 16, 2, NULL),
 (23, 'ami31', 6, 'pendiente', NULL, NULL, NULL),
-(24, 'zxc12', 6, 'pendiente', NULL, NULL, NULL);
+(24, 'zxc12', 6, 'listo para servir', 16, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -422,13 +445,13 @@ ALTER TABLE `empleados`
 -- AUTO_INCREMENT de la tabla `encuesta_cliente`
 --
 ALTER TABLE `encuesta_cliente`
-  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(48) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
 
 --
 -- AUTO_INCREMENT de la tabla `mesas`
